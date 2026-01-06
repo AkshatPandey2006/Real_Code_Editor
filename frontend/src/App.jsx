@@ -9,7 +9,7 @@ const SOCKET_OPTIONS = {
   reconnectionDelay: 1000,
 };
 
-// --- Custom Hook (Logic Layer) ---
+// --- Custom Hook (Logic) ---
 const useRoom = () => {
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -101,14 +101,15 @@ const useRoom = () => {
   };
 };
 
-// --- Animations ---
+// --- Components ---
+
 const FadeIn = ({ children, delay = 0 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef(null);
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) { setIsVisible(true); observer.disconnect(); }
-    }, { threshold: 0.2 });
+    }, { threshold: 0.1 });
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
   }, []);
@@ -117,6 +118,29 @@ const FadeIn = ({ children, delay = 0 }) => {
       {children}
     </div>
   );
+};
+
+const AccordionItem = ({ question, answer }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div className={`faq-item ${isOpen ? 'open' : ''}`} onClick={() => setIsOpen(!isOpen)}>
+      <div className="faq-question">
+        {question}
+        <span className="faq-icon">{isOpen ? '−' : '+'}</span>
+      </div>
+      <div className="faq-answer">{answer}</div>
+    </div>
+  );
+};
+
+// --- SVG Icons (Professional Replacement for Emojis) ---
+const Icons = {
+  Lightning: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
+  Shield: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+  Code: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>,
+  Users: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>,
+  Check: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"></polyline></svg>,
+  ArrowRight: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
 };
 
 // --- Main App ---
@@ -166,19 +190,20 @@ const App = () => {
 
         <section className="hero">
           <FadeIn>
-            <div className="hero-badge">New: Real-time Cursor Sync v2.0</div>
+            <div className="hero-badge">v2.0 Now Available</div>
             <h1 className="hero-title">
-              Code and discuss <br /> instantly <span className="gradient-text">together.</span>
+              Code at the <br /> speed of <span className="gradient-text">thought.</span>
             </h1>
             <p className="hero-sub">
               Zero-latency collaboration environment. No sign-up. <br/> 
-              Just generate a room and start collaborating.
+              Just generate a room and start shipping.
             </p>
           </FadeIn>
 
           <FadeIn delay={200}>
+            {/* Improved Visibility for Join Panel */}
             <div className="glass-panel join-panel">
-              <div className="panel-glow"></div>
+              <div className="panel-shine"></div>
               <div className="panel-content">
                 <div className="input-row">
                   <div className="input-wrapper grow">
@@ -211,35 +236,47 @@ const App = () => {
                   />
                 </div>
                 <button className="primary-btn" onClick={joinRoom} disabled={!isConnected}>
-                  {isConnected ? "Enter Workspace" : "Establishing Connection..."} <span className="arrow">→</span>
+                  {isConnected ? "Enter Workspace" : "Connecting..."} <Icons.ArrowRight />
                 </button>
               </div>
             </div>
           </FadeIn>
         </section>
 
+        {/* Social Proof Strip */}
+        <div className="social-proof-strip">
+          <p>TRUSTED BY DEVELOPERS AT</p>
+          <div className="logos">
+            <span>STARTUP.IO</span>
+            <span>NEXTGEN</span>
+            <span>VORTEX</span>
+            <span>CODEBASE</span>
+          </div>
+        </div>
+
         <section className="features">
-          <div className="section-title">
+          <div className="section-header">
             <h2>Engineered for performance</h2>
+            <p>Built on WebSockets for real-time bi-directional communication.</p>
           </div>
           <div className="bento-grid">
             <FadeIn delay={100}>
               <div className="bento-card card-1">
-                <div className="card-icon">⚡</div>
+                <div className="card-icon"><Icons.Lightning /></div>
                 <h3>Instant Sync</h3>
                 <p>WebSocket architecture ensures <span className="highlight">sub-30ms latency</span> anywhere in the world.</p>
               </div>
             </FadeIn>
             <FadeIn delay={200}>
               <div className="bento-card card-2">
-                <div className="card-icon">🛡️</div>
+                <div className="card-icon"><Icons.Shield /></div>
                 <h3>Secure by Default</h3>
-                <p>Ephemeral rooms. Data is wiped from memory as soon as the last user leaves.</p>
+                <p>Ephemeral rooms. Data is wiped from memory as soon as the last user leaves the session.</p>
               </div>
             </FadeIn>
             <FadeIn delay={300}>
               <div className="bento-card card-3">
-                <div className="card-icon">💻</div>
+                <div className="card-icon"><Icons.Code /></div>
                 <h3>Pro Environment</h3>
                 <p>Monaco Editor implementation with full syntax highlighting and IntelliSense.</p>
               </div>
@@ -247,11 +284,70 @@ const App = () => {
           </div>
         </section>
 
+        {/* How It Works Section */}
+        <section className="how-it-works">
+          <div className="section-header">
+            <h2>Workflow</h2>
+          </div>
+          <div className="steps-wrapper">
+            <FadeIn delay={100}>
+              <div className="step-card">
+                <div className="step-number">01</div>
+                <h3>Create</h3>
+                <p>Generate a unique Room ID or enter a custom one.</p>
+              </div>
+            </FadeIn>
+            <div className="step-connector"></div>
+            <FadeIn delay={200}>
+              <div className="step-card">
+                <div className="step-number">02</div>
+                <h3>Share</h3>
+                <p>Send the ID to your team. No account creation needed.</p>
+              </div>
+            </FadeIn>
+            <div className="step-connector"></div>
+            <FadeIn delay={300}>
+              <div className="step-card">
+                <div className="step-number">03</div>
+                <h3>Collaborate</h3>
+                <p>Edit code simultaneously with live presence indicators.</p>
+              </div>
+            </FadeIn>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section className="faq-section">
+          <div className="section-header">
+            <h2>Frequently Asked Questions</h2>
+          </div>
+          <div className="faq-grid">
+            <AccordionItem 
+              question="Is CollabCode free to use?" 
+              answer="Yes, CollabCode is completely free and open-source for developers, students, and interviewers." 
+            />
+             <AccordionItem 
+              question="Does it save my code?" 
+              answer="No. For security reasons, CollabCode is ephemeral. Once all users leave the room, the code is erased." 
+            />
+             <AccordionItem 
+              question="What languages are supported?" 
+              answer="Currently, we support JavaScript, Python, Java, and C++ with full syntax highlighting." 
+            />
+          </div>
+        </section>
+
         <footer className="footer">
-          <div className="footer-line"></div>
           <div className="footer-content">
-            <span>© 2026 CollabCode Inc.</span>
-            <a href="https://github.com/AkshatPandey2006" target="_blank">Built by Akshat Pandey</a>
+            <div className="footer-left">
+              <div className="logo-small"><div className="logo-square-sm"></div> CollabCode</div>
+              <p>© 2026 Akshat Pandey. All rights reserved.</p>
+            </div>
+            <div className="footer-links">
+              <a href="https://github.com/AkshatPandey2006" target="_blank">GitHub</a>
+              <a href="#">Twitter</a>
+              <a href="#">Status</a>
+            </div>
           </div>
         </footer>
 
@@ -265,7 +361,7 @@ const App = () => {
     );
   }
 
-  // --- APP EDITOR ---
+  // --- APP EDITOR (Authenticated) ---
   return (
     <div className="app-container">
       <div className="sidebar" style={{ width: sidebarWidth }}>
@@ -273,7 +369,9 @@ const App = () => {
           <h2 title={agenda}>{agenda || "Untitled Room"}</h2>
           <div className="room-meta">
             <span className="room-id">{roomId}</span>
-            <button onClick={copyRoomId} className="icon-btn" title="Copy">❐</button>
+            <button onClick={copyRoomId} className="icon-btn" title="Copy">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
           </div>
         </div>
 
