@@ -231,13 +231,11 @@ const App = () => {
                     </div>
                     <h1 className="hero-title">
                         Lightning-fast <br />
-                        collaborative coding. <br />
+                        collab coding, <br />
                         <span className="gradient-text">Zero friction.</span>
                     </h1>
                     <p className="hero-sub">
-                        Built for interviews, pair programming, and competitive programming practice.
-                        <br/><br/>
-                        Spin up instant coding rooms with a powerful, VS Code-like editor. 
+                        Built for interviews, pair programming, and competitive programming practice. Spin up instant coding rooms with a powerful, VS Code-like editor. 
                     </p>
                     <div className="hero-cta">
                         <button className="primary-btn large" onClick={() => document.getElementById('join-box').scrollIntoView({ behavior: 'smooth' })}>
