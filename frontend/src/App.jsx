@@ -3,7 +3,7 @@ import "./App.css";
 import io from "socket.io-client";
 import Editor from "@monaco-editor/react";
 
-const SERVER_URL = "https://real-time-code-9ui2.onrender.com/";
+const SERVER_URL = "http://localhost:5000";
 const SOCKET_OPTIONS = {
   reconnectionAttempts: 5,
   reconnectionDelay: 1000,
