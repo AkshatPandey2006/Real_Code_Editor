@@ -7,8 +7,8 @@ import axios from 'axios';
 const app = express();
 const server = http.createServer(app);
 
-// Keep your self-ping logic
-const url = `https://real-time-code-9ui2.onrender.com/`;
+// Self-ping to keep Render awake
+const url = `https://real-code-editor-4yx6.onrender.com/`;
 const interval = 30000;
 
 function reloadWebsite() {
@@ -38,13 +38,13 @@ io.on("connection", (socket) => {
   let currentUser = null;
 
   socket.on("join", ({ roomId, userName }) => {
-    // 1. Leave previous room if any
+    // 1. Leave previous room
     if (currentRoom) {
       socket.leave(currentRoom);
       if (rooms.has(currentRoom)) {
         rooms.get(currentRoom).delete(currentUser);
-        // FIX 1: Send 'updateUserList' to the old room
-        io.to(currentRoom).emit("updateUserList", Array.from(rooms.get(currentRoom)));
+        // Sync list for old room
+        io.to(currentRoom).emit("userJoined", Array.from(rooms.get(currentRoom)));
       }
     }
 
@@ -59,11 +59,11 @@ io.on("connection", (socket) => {
 
     rooms.get(roomId).add(userName);
 
-    // FIX 2: Send 'updateUserList' with the array (for the sidebar)
-    io.to(roomId).emit("updateUserList", Array.from(rooms.get(roomId)));
+    // FIX: Send the LIST using 'userJoined' (Matching the similar project logic)
+    io.to(roomId).emit("userJoined", Array.from(rooms.get(roomId)));
     
-    // FIX 3: Send 'userJoined' with the name (for the toast notification)
-    socket.to(roomId).emit("userJoined", userName);
+    // Send a separate 'notification' event for the toast
+    socket.broadcast.to(roomId).emit("notification", `${userName} joined the room`);
   });
 
   socket.on("codeChange", ({ roomId, code }) => {
@@ -74,9 +74,9 @@ io.on("connection", (socket) => {
     if (currentRoom && currentUser) {
       rooms.get(currentRoom).delete(currentUser);
       
-      // FIX 4: Correct events on leave
-      socket.to(currentRoom).emit("userLeft", currentUser);
-      io.to(currentRoom).emit("updateUserList", Array.from(rooms.get(currentRoom)));
+      // FIX: Update list on leave
+      io.to(currentRoom).emit("userJoined", Array.from(rooms.get(currentRoom)));
+      socket.broadcast.to(currentRoom).emit("notification", `${currentUser} left the room`);
 
       socket.leave(currentRoom);
       currentRoom = null;
@@ -96,9 +96,9 @@ io.on("connection", (socket) => {
     if (currentRoom && currentUser && rooms.has(currentRoom)) {
       rooms.get(currentRoom).delete(currentUser);
       
-      // FIX 5: Correct events on disconnect
-      socket.to(currentRoom).emit("userLeft", currentUser);
-      io.to(currentRoom).emit("updateUserList", Array.from(rooms.get(currentRoom)));
+      // FIX: Update list on disconnect
+      io.to(currentRoom).emit("userJoined", Array.from(rooms.get(currentRoom)));
+      socket.broadcast.to(currentRoom).emit("notification", `${currentUser} left`);
     }
     console.log("User Disconnected");
   });
