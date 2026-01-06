@@ -39,12 +39,12 @@ body {
   filter: blur(80px); pointer-events: none; z-index: -1;
 }
 
-/* --- LANDING PAGE (SCROLLABLE) --- */
+/* --- LANDING PAGE --- */
 .landing-container { 
-  min-height: 100vh; /* Allow it to grow */
+  min-height: 100vh;
   display: flex; 
   flex-direction: column;
-  overflow-x: hidden; /* Prevent horizontal scroll */
+  overflow-x: hidden;
 }
 
 .navbar { 
@@ -56,58 +56,140 @@ body {
 }
 
 .nav-content { width: 100%; display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; }
+.nav-right { display: flex; align-items: center; gap: 24px; }
 .logo { font-weight: 800; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
 .logo-glitch { color: var(--blue); font-family: 'Fira Code', monospace; }
 .status-pill { font-size: 0.75rem; display: flex; align-items: center; gap: 8px; color: #888; border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; }
 .status-pill.online .dot { background: var(--green); box-shadow: 0 0 8px var(--green); }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: #555; }
 
-/* Hero Section */
-.hero-center { 
-  min-height: 100vh; /* Take full screen initially */
+.github-link { display: flex; align-items: center; gap: 8px; color: #888; text-decoration: none; font-size: 0.9rem; transition: 0.2s; }
+.github-link:hover { color: #fff; }
+
+/* --- NEW HERO SECTION (2-COLUMN LAYOUT) --- */
+.hero-section { 
+  min-height: 95vh; /* Almost full height */
   display: flex; 
   align-items: center; 
   justify-content: center; 
-  padding-top: 80px; /* Offset for fixed navbar */
+  padding: 120px 24px 60px; /* Top padding for navbar */
 }
 
-/* Join Panel */
+.hero-content-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    max-width: 1200px;
+    width: 100%;
+    align-items: center;
+}
+
+/* Left Column: Typography */
+.hero-left {
+    padding-right: 20px;
+}
+
+.hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 0.8rem; color: var(--blue);
+    background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3);
+    padding: 6px 12px; border-radius: 20px; margin-bottom: 24px; font-weight: 600;
+}
+.badge-dot { width: 6px; height: 6px; background: var(--blue); border-radius: 50%; box-shadow: 0 0 8px var(--blue); }
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 24px;
+    letter-spacing: -0.03em;
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, #ffffff, #888888);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+.hero-sub {
+    font-size: 1.125rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-bottom: 40px;
+    max-width: 500px;
+}
+
+.hero-cta {
+    display: flex; align-items: center; gap: 20px; margin-bottom: 40px;
+}
+
+.secondary-link { color: #888; text-decoration: none; font-weight: 600; transition: 0.2s; }
+.secondary-link:hover { color: #fff; text-decoration: underline; }
+
+.trusted-by p { font-size: 0.8rem; color: #555; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+
+
+/* Right Column: Join Panel (Existing styles adjusted) */
+.hero-right {
+    display: flex;
+    justify-content: center;
+}
+
 .join-panel {
-  width: 400px; background: rgba(20, 20, 20, 0.6);
+  width: 100%; max-width: 420px; /* Fixed max width */
+  background: rgba(20, 20, 20, 0.6);
   border: 1px solid var(--border); border-top: 1px solid rgba(255,255,255,0.15);
-  border-radius: 16px; padding: 30px;
-  backdrop-filter: blur(20px); box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  border-radius: 24px; padding: 32px;
+  backdrop-filter: blur(20px); box-shadow: 0 30px 60px -12px rgba(0,0,0,0.5);
 }
 .panel-header { margin-bottom: 25px; text-align: center; }
-.panel-header h2 { margin-bottom: 5px; font-weight: 600; }
-.panel-header p { font-size: 0.85rem; color: var(--text-dim); }
+.panel-header h2 { margin-bottom: 8px; font-size: 1.5rem; font-weight: 700; }
+.panel-header p { font-size: 0.9rem; color: var(--text-dim); }
 
-.input-group { margin-bottom: 15px; }
+.input-group { margin-bottom: 20px; }
 .input-group label { display: block; font-size: 0.7rem; font-weight: 700; color: #666; margin-bottom: 8px; letter-spacing: 0.05em; }
 .optional { font-weight: 400; color: #444; }
 .input-group input { 
-  width: 100%; background: #0a0a0a; border: 1px solid var(--border); padding: 12px; color: #fff;
-  border-radius: 8px; font-size: 0.9rem; outline: none; transition: 0.2s; font-family: 'Fira Code', monospace;
+  width: 100%; background: #0a0a0a; border: 1px solid var(--border); padding: 14px; color: #fff;
+  border-radius: 10px; font-size: 0.95rem; outline: none; transition: 0.2s; font-family: 'Fira Code', monospace;
 }
-.input-group input:focus { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+.input-group input:focus { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); background: #0f0f0f; }
 
 .input-with-action { display: flex; }
 .input-with-action input { border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: none; }
 .input-with-action button { 
-  background: #111; border: 1px solid var(--border); color: #888; cursor: pointer; padding: 0 15px; 
-  border-top-right-radius: 8px; border-bottom-right-radius: 8px; font-size: 0.75rem; font-weight: 600;
+  background: #111; border: 1px solid var(--border); color: #888; cursor: pointer; padding: 0 18px; 
+  border-top-right-radius: 10px; border-bottom-right-radius: 10px; font-size: 0.75rem; font-weight: 600;
   transition: 0.2s;
 }
 .input-with-action button:hover { background: #222; color: #fff; }
 
 .primary-btn { 
-  width: 100%; background: var(--blue); color: #fff; border: none; padding: 14px; margin-top: 10px;
-  border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); transition: 0.2s;
+  width: 100%; background: var(--blue); color: #fff; border: none; padding: 16px; margin-top: 10px;
+  border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); transition: 0.2s;
 }
-.primary-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(59, 130, 246, 0.5); }
+.primary-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(59, 130, 246, 0.6); }
+.primary-btn.large { width: auto; padding: 16px 32px; } /* For the left column button */
+
 
 /* --- SECTIONS (Features, How-to, FAQ) --- */
+/* Ensure grid items stretch and have equal height */
+.bento-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+    gap: 24px; 
+    align-items: stretch; 
+}
+  
+.bento-card {
+    height: 100%;
+    display: flex; 
+    flex-direction: column;
+    background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+    padding: 30px; border-radius: 12px; transition: 0.3s;
+}
+
+/* (REST OF CSS REMAINS THE SAME AS BEFORE) */
 .features, .how-it-works, .faq-section {
   max-width: 1100px;
   margin: 0 auto;
@@ -119,16 +201,6 @@ body {
 .section-header h2 { font-size: 2rem; font-weight: 700; margin-bottom: 10px; }
 .section-header p { color: var(--text-dim); }
 
-/* Bento Grid */
-.bento-grid { 
-  display: grid; 
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-  gap: 24px; 
-}
-.bento-card {
-  background: rgba(255,255,255,0.02); border: 1px solid var(--border);
-  padding: 30px; border-radius: 12px; transition: 0.3s;
-}
 .bento-card:hover { border-color: var(--blue-glow); transform: translateY(-5px); }
 .card-icon { color: var(--blue); margin-bottom: 15px; }
 .bento-card h3 { font-size: 1.1rem; margin-bottom: 10px; font-weight: 600; }
@@ -254,10 +326,14 @@ body {
 .fade-in-up { animation: fadeInUp 0.5s ease-out; }
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-/* Mobile */
-@media (max-width: 768px) {
-  .hero-center { padding-top: 100px; }
-  .join-panel { width: 90%; }
-  .bento-grid { grid-template-columns: 1fr; }
-  .nav-content { padding: 0 20px; }
+/* Mobile Responsive for 2-Column Layout */
+@media (max-width: 960px) {
+  .hero-content-wrapper {
+      grid-template-columns: 1fr; /* Stack vertically */
+      gap: 40px;
+      text-align: center;
+  }
+  .hero-left { padding-right: 0; }
+  .hero-cta { justify-content: center; }
+  .hero-title { font-size: 2.5rem; }
 }
