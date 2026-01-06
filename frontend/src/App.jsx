@@ -9,9 +9,8 @@ const SOCKET_OPTIONS = {
   reconnectionDelay: 1000,
 };
 
-// --- HOOKS & HELPERS (Unchanged) ---
+// --- HOOKS ---
 const useRoom = () => {
-  // ... (Keep all your existing hook logic here)
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [joined, setJoined] = useState(false);
@@ -43,22 +42,39 @@ const useRoom = () => {
 
   useEffect(() => {
     if (!socket) return;
-    socket.on("updateUserList", (updatedUsers) => setUsers(updatedUsers));
-    socket.on("userJoined", (user) => addToast(`${user} joined the room`, "success"));
-    socket.on("userLeft", (user) => addToast(`${user} left the room`, "warning"));
+    
+    socket.on("updateUserList", (updatedUsers) => {
+      setUsers(updatedUsers);
+    });
+
+    socket.on("userJoined", (user) => {
+      addToast(`${user} joined the room`, "success");
+    });
+
+    socket.on("userLeft", (user) => {
+      addToast(`${user} left the room`, "warning");
+    });
+
     socket.on("codeUpdate", (newCode) => setCode(newCode));
+    
     socket.on("userTyping", (user) => {
       setTyping(`${user} is typing...`);
       const timer = setTimeout(() => setTyping(""), 2000);
       return () => clearTimeout(timer);
     });
+
     socket.on("languageUpdate", (newLanguage) => {
       setLanguage(newLanguage);
       addToast(`Language changed to ${newLanguage}`, "info");
     });
+
     return () => {
-      socket.off("updateUserList"); socket.off("userJoined"); socket.off("userLeft");
-      socket.off("codeUpdate"); socket.off("userTyping"); socket.off("languageUpdate");
+      socket.off("updateUserList");
+      socket.off("userJoined");
+      socket.off("userLeft");
+      socket.off("codeUpdate");
+      socket.off("userTyping");
+      socket.off("languageUpdate");
     };
   }, [socket, addToast]);
 
@@ -70,30 +86,61 @@ const useRoom = () => {
       addToast("Room ID and Name required", "error");
     }
   };
-  const leaveRoom = () => { if (socket) socket.emit("leaveRoom"); setJoined(false); setRoomId(""); setUserName(""); setCode("// Start coding..."); };
-  const updateCode = (newCode) => { setCode(newCode); if (socket) { socket.emit("codeChange", { roomId, code: newCode }); socket.emit("typing", { roomId, userName }); } };
-  const updateLanguage = (newLang) => { setLanguage(newLang); if (socket) socket.emit("languageChange", { roomId, language: newLang }); };
 
-  return { socket, isConnected, joined, roomId, setRoomId, userName, setUserName, agenda, setAgenda, language, code, users, typing, toasts, joinRoom, leaveRoom, updateCode, updateLanguage, addToast };
+  const leaveRoom = () => {
+    if (socket) socket.emit("leaveRoom");
+    setJoined(false);
+    setRoomId("");
+    setUserName("");
+    setCode("// Start coding...");
+  };
+
+  const updateCode = (newCode) => {
+    setCode(newCode);
+    if (socket) {
+      socket.emit("codeChange", { roomId, code: newCode });
+      socket.emit("typing", { roomId, userName });
+    }
+  };
+
+  const updateLanguage = (newLang) => {
+    setLanguage(newLang);
+    if (socket) socket.emit("languageChange", { roomId, language: newLang });
+  };
+
+  return {
+    socket, isConnected, joined, roomId, setRoomId, userName, setUserName,
+    agenda, setAgenda, language, code, users, typing, toasts,
+    joinRoom, leaveRoom, updateCode, updateLanguage, addToast
+  };
 };
 
-// --- Visual Components (Unchanged) ---
+// --- COMPONENTS ---
 const FadeIn = ({ children, delay = 0 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef(null);
   useEffect(() => {
-    const observer = new IntersectionObserver(([entry]) => { if (entry.isIntersecting) { setIsVisible(true); observer.disconnect(); } }, { threshold: 0.1 });
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { setIsVisible(true); observer.disconnect(); }
+    }, { threshold: 0.1 });
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
   }, []);
-  return <div ref={ref} style={{ transitionDelay: `${delay}ms` }} className={`fade-in ${isVisible ? "visible" : ""}`}>{children}</div>;
+  return (
+    <div ref={ref} style={{ transitionDelay: `${delay}ms` }} className={`fade-in ${isVisible ? "visible" : ""}`}>
+      {children}
+    </div>
+  );
 };
 
 const AccordionItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <div className={`faq-item ${isOpen ? 'open' : ''}`} onClick={() => setIsOpen(!isOpen)}>
-      <div className="faq-question">{question}<span className="faq-icon">{isOpen ? '−' : '+'}</span></div>
+      <div className="faq-question">
+        {question}
+        <span className="faq-icon">{isOpen ? '−' : '+'}</span>
+      </div>
       <div className="faq-answer">{answer}</div>
     </div>
   );
@@ -109,7 +156,7 @@ const Icons = {
   Github: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
 };
 
-// --- Main App ---
+// --- MAIN APP ---
 const App = () => {
   const {
     isConnected, joined, roomId, setRoomId, userName, setUserName,
@@ -133,7 +180,7 @@ const App = () => {
   const generateRoomId = () => setRoomId(Math.random().toString(36).substring(2, 8).toUpperCase());
   const copyRoomId = () => { navigator.clipboard.writeText(roomId); addToast("ID Copied", "success"); };
 
-  // --- RENDER: LANDING PAGE (New 2-Column Layout) ---
+  // --- LANDING PAGE VIEW ---
   if (!joined) {
     return (
       <div className="landing-container">
@@ -152,11 +199,11 @@ const App = () => {
           </div>
         </nav>
 
-        {/* NEW HERO SECTION (2 Columns) */}
+        {/* HERO SECTION (2-Column Layout) */}
         <section className="hero-section">
             <div className="hero-content-wrapper">
                 
-                {/* Left Column: Professional Copy */}
+                {/* Left Column: Text */}
                 <div className="hero-left fade-in-up">
                     <div className="hero-badge">
                         <span className="badge-dot"></span> v2.0 Now Public
@@ -167,23 +214,20 @@ const App = () => {
                         <span className="gradient-text">Zero friction.</span>
                     </h1>
                     <p className="hero-sub">
-                        Spin up instant coding rooms with a powerful, collaborative editor. 
+                        Spin up instant coding rooms with a powerful, VS Code-like editor. 
                         Powered by WebSockets for sub-30ms sync. No sign-ups, secure by default.
                     </p>
                     <div className="hero-cta">
                         <button className="primary-btn large" onClick={() => document.getElementById('join-box').scrollIntoView({ behavior: 'smooth' })}>
                             Start Coding Now <Icons.ArrowRight />
                         </button>
-                        <a href="https://github.com/AkshatPandey2006" target="_blank" className="secondary-link">
-                            View Documentation
-                        </a>
                     </div>
                     <div className="trusted-by">
                         <p>Open Source and free forever.</p>
                     </div>
                 </div>
 
-                {/* Right Column: The Join Box */}
+                {/* Right Column: Join Box */}
                 <div className="hero-right fade-in-up" style={{animationDelay: '0.2s'}} id="join-box">
                     <div className="glass-panel join-panel">
                         <div className="panel-header">
@@ -217,7 +261,7 @@ const App = () => {
             </div>
         </section>
         
-        {/* REST OF THE PAGE (Features, etc.) - UNCHANGED */}
+        {/* FEATURES */}
         <section className="features">
           <div className="section-header">
             <h2>Engineered for performance</h2>
@@ -248,7 +292,7 @@ const App = () => {
           </div>
         </section>
 
-        {/* HOW IT WORKS SECTION */}
+        {/* HOW IT WORKS */}
         <section className="how-it-works">
           <div className="section-header">
             <h2>How it works</h2>
@@ -280,7 +324,7 @@ const App = () => {
           </div>
         </section>
 
-        {/* FAQ SECTION */}
+        {/* FAQ */}
         <section className="faq-section">
           <div className="section-header">
             <h2>Frequently asked questions</h2>
@@ -316,7 +360,6 @@ const App = () => {
           </div>
         </footer>
 
-        {/* Toasts */}
         <div className="toast-area">
           {toasts.map(t => (
             <div key={t.id} className={`toast-message ${t.type}`}>{t.message}</div>
@@ -326,12 +369,11 @@ const App = () => {
     );
   }
 
-  // --- RENDER: EDITOR VIEW (Unchanged) ---
+  // --- EDITOR VIEW (When Joined) ---
   return (
     <div className="app-container">
       <div className="grid-background" style={{opacity: 0.1}}></div>
       
-      {/* Sidebar */}
       <div className="sidebar" style={{ width: sidebarWidth }}>
         <div className="sidebar-header">
           <div className="brand-small"><span className="logo-glitch">{`</>`}</span> CollabCode</div>
@@ -361,7 +403,6 @@ const App = () => {
 
       <div className="resizer" onMouseDown={() => setIsResizing(true)}></div>
 
-      {/* Main Editor Area */}
       <div className="main-content">
         <div className="toolbar">
           <div className="toolbar-left">
@@ -398,7 +439,6 @@ const App = () => {
           />
         </div>
 
-        {/* Status Bar */}
         <div className="status-bar">
           <div className="status-item">Spaces: 2</div>
           <div className="status-item">UTF-8</div>
