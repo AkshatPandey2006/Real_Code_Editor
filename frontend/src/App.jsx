@@ -168,11 +168,11 @@ const App = () => {
           <FadeIn>
             <div className="hero-badge">New: Real-time Cursor Sync v2.0</div>
             <h1 className="hero-title">
-              Code at the <br /> speed of <span className="gradient-text">thought.</span>
+              Code and discuss <br /> instantly <span className="gradient-text">together.</span>
             </h1>
             <p className="hero-sub">
               Zero-latency collaboration environment. No sign-up. <br/> 
-              Just generate a room and start shipping.
+              Just generate a room and start collaborating.
             </p>
           </FadeIn>
 
