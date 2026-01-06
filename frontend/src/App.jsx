@@ -9,7 +9,7 @@ const SOCKET_OPTIONS = {
   reconnectionDelay: 1000,
 };
 
-// --- Custom Hook (Logic) ---
+// --- Custom Hook ---
 const useRoom = () => {
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -101,7 +101,7 @@ const useRoom = () => {
   };
 };
 
-// --- Components ---
+// --- Visual Components ---
 const FadeIn = ({ children, delay = 0 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef(null);
@@ -147,7 +147,7 @@ const App = () => {
     joinRoom, leaveRoom, updateCode, updateLanguage, addToast
   } = useRoom();
 
-  const [sidebarWidth, setSidebarWidth] = useState(260);
+  const [sidebarWidth, setSidebarWidth] = useState(280);
   const [isResizing, setIsResizing] = useState(false);
 
   const resize = useCallback((e) => {
@@ -161,7 +161,7 @@ const App = () => {
   }, [resize]);
 
   const generateRoomId = () => setRoomId(Math.random().toString(36).substring(2, 9).toUpperCase());
-  const copyRoomId = () => { navigator.clipboard.writeText(roomId); addToast("ID Copied", "success"); };
+  const copyRoomId = () => { navigator.clipboard.writeText(roomId); addToast("Room ID Copied!", "success"); };
 
   // --- LANDING PAGE ---
   if (!joined) {
@@ -178,7 +178,7 @@ const App = () => {
             <div className="nav-actions">
               <a href="https://github.com/AkshatPandey2006" target="_blank" className="nav-link">GitHub</a>
               <div className={`status-pill ${isConnected ? 'online' : 'offline'}`}>
-                <div className="dot"></div> {isConnected ? "System Optimal" : "Reconnecting"}
+                <div className="dot"></div> {isConnected ? "System Online" : "Reconnecting"}
               </div>
             </div>
           </div>
@@ -187,7 +187,7 @@ const App = () => {
         <section className="hero">
           <FadeIn>
             <div className="hero-badge">
-              <span className="badge-dot"></span> v2.0 Now Available
+              <span className="badge-dot"></span> Liquid Glass UI v2.0
             </div>
             <h1 className="hero-title">
               Code at the <br /> speed of <span className="gradient-text">thought.</span>
@@ -199,9 +199,8 @@ const App = () => {
           </FadeIn>
 
           <FadeIn delay={200}>
-            {/* The Blue Glass Panel */}
+            {/* LIQUID GLASS PANEL */}
             <div className="glass-panel join-panel">
-              <div className="panel-glow-effect"></div>
               <div className="panel-content">
                 <div className="input-row">
                   <div className="input-wrapper grow">
@@ -335,6 +334,7 @@ const App = () => {
           </div>
         </footer>
 
+        {/* Global Toast Area */}
         <div className="toast-area">
           {toasts.map(t => (
             <div key={t.id} className={`toast-message ${t.type}`}>{t.message}</div>
@@ -344,13 +344,20 @@ const App = () => {
     );
   }
 
-  // --- APP EDITOR ---
+  // --- EDITOR SPACE ---
   return (
     <div className="app-container">
+      {/* Background FX (Dimmed) */}
+      <div className="grid-background" style={{ opacity: 0.2 }}></div>
+      <div className="spotlight" style={{ opacity: 0.1 }}></div>
+
+      {/* LIQUID SIDEBAR */}
       <div className="sidebar" style={{ width: sidebarWidth }}>
         <div className="sidebar-header">
+          <div className="brand-small"><span className="logo-icon-sm">{`</>`}</span> CollabCode</div>
           <h2 title={agenda}>{agenda || "Untitled Room"}</h2>
           <div className="room-meta">
+            <span className="room-label">ID</span>
             <span className="room-id">{roomId}</span>
             <button onClick={copyRoomId} className="icon-btn" title="Copy">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
@@ -376,6 +383,7 @@ const App = () => {
       <div className="resizer" onMouseDown={() => setIsResizing(true)}></div>
 
       <div className="editor-area">
+        {/* LIQUID TOOLBAR */}
         <div className="toolbar">
           <div className="toolbar-left">
             <select value={language} onChange={e => updateLanguage(e.target.value)} className="lang-select">
@@ -387,7 +395,9 @@ const App = () => {
           </div>
           <div className="toolbar-right">
              {typing && <span className="typing-status">{typing}</span>}
-             <div className="live-dot"></div>
+             <div className="live-indicator">
+               <div className="live-dot"></div> Live
+             </div>
           </div>
         </div>
         <Editor
@@ -403,10 +413,13 @@ const App = () => {
             padding: { top: 20 },
             smoothScrolling: true,
             cursorBlinking: "smooth",
+            scrollBeyondLastLine: false,
+            contextmenu: true,
           }}
         />
       </div>
       
+      {/* LIQUID TOASTS */}
       <div className="toast-area">
         {toasts.map(t => (
           <div key={t.id} className={`toast-message ${t.type}`}>{t.message}</div>
@@ -416,6 +429,7 @@ const App = () => {
   );
 };
 
+// --- Helpers ---
 const stringToColor = (str) => {
   let hash = 0;
   for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
