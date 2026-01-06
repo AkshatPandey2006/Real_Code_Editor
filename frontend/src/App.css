@@ -1,157 +1,287 @@
+:root {
+  --bg-dark: #1e1e1e;
+  --bg-sidebar: #252526;
+  --bg-header: #2d2d2d;
+  --border-color: #3e3e42;
+  --primary-color: #007acc;
+  --text-main: #cccccc;
+  --text-dim: #858585;
+  --danger-red: #e74c3c;
+}
+
 * {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
 }
 
 body {
-  font-family: "Roboto", "sans-serif";
-  background: #f0f2f5;
-  color: #333;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  height: 100vh;
+  overflow: hidden;
 }
 
+/* Join Screen - Square Look */
 .join-container {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-
-  .join-form {
-    background-color: #fff;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    width: 300px;
-
-    h1 {
-      margin-bottom: 1.5rem;
-      color: #333;
-    }
-
-    input {
-      width: 100%;
-      padding: 0.75rem;
-      margin-bottom: 1rem;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 1rem;
-    }
-
-    button {
-      width: 100%;
-      padding: 0.75rem;
-      background-color: #4a90e2;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-
-      &:hover {
-        background-color: #357abd;
-      }
-    }
-  }
+  background: #1e1e1e; /* Flat background for cleaner look */
 }
 
+.join-form {
+  background: var(--bg-sidebar);
+  padding: 2.5rem;
+  /* Removed border-radius for square look */
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  text-align: center;
+  width: 360px;
+}
+
+.join-form h1 {
+  margin-bottom: 2rem;
+  font-weight: 400; /* Lighter font weight for elegance */
+  color: #fff;
+  letter-spacing: 1px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+/* Inputs - Square Look */
+.input-group input {
+  width: 100%;
+  padding: 12px;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-color);
+  color: #fff;
+  /* Removed border-radius */
+  outline: none;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.input-group input:focus {
+  border-color: var(--primary-color);
+}
+
+.room-id-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.room-id-wrapper input {
+  padding-right: 80px;
+}
+
+.btn-generate {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #3e3e42;
+  color: #fff;
+  border: 1px solid #555;
+  padding: 5px 10px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-generate:hover {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-join {
+  width: 100%;
+  padding: 12px;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background 0.2s;
+}
+
+.btn-join:hover {
+  background: #006bb3;
+}
+
+/* Editor Layout */
 .editor-container {
   display: flex;
   height: 100vh;
+  width: 100vw;
+}
 
-  .sidebar {
-    width: 250px;
-    padding: 1.5rem;
-    background-color: #2c3e50;
-    color: #ecf0f1;
+/* Sidebar */
+.sidebar {
+  /* Removed static width, now handled by inline style in JSX */
+  background: var(--bg-sidebar);
+  /* Removed border-right, now handled by resizer */
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  overflow: hidden; /* Prevent content spill during resize */
+  min-width: 150px; /* Safety min width */
+}
 
-    .room-info {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 1rem;
+/* Resizer Handle */
+.resizer {
+  width: 4px;
+  background-color: var(--bg-dark);
+  border-left: 1px solid var(--border-color);
+  cursor: col-resize;
+  transition: background-color 0.2s;
+  z-index: 10;
+}
 
-      h2 {
-        margin-bottom: 1rem;
-        font-size: 1.2rem;
-      }
+.resizer:hover, .resizer:active {
+  background-color: var(--primary-color);
+}
 
-      .copy-button {
-        padding: 0.5rem 1rem;
-        background-color: #3498db;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
+.sidebar-header {
+  margin-bottom: 2rem;
+}
 
-        &:hover {
-          background-color: #2980b9;
-        }
-      }
+.sidebar-header h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-      .copy-success {
-        margin-left: 0.5rem;
-        color: rgb(38, 167, 38);
-        font-size: 0.8rem;
-      }
-    }
+.room-id-box {
+  background: var(--bg-dark);
+  padding: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  border: 1px solid var(--border-color);
+  font-size: 0.85rem;
+}
 
-    h3 {
-      margin-top: 1.5rem;
-      margin-bottom: 0.5rem;
-      font-size: 1rem;
-    }
-    ul {
-      list-style: none;
-      li {
-        padding: 0.5rem;
-        font-size: 0.9rem;
-        background: gray;
-        margin-top: 5px;
-        border-radius: 5px;
-      }
-    }
+.copy-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-main);
+}
 
-    .typing-indicator {
-      margin-top: 1rem;
-      font-size: 1rem;
-      color: white;
-    }
+.users-list {
+  flex-grow: 1;
+  overflow-y: auto; /* Allow scrolling if many users */
+}
 
-    .language-selector {
-      margin-top: 1rem;
-      width: 100%;
-      padding: 0.5rem;
-      background-color: #34495e;
-      color: white;
-      border: none;
-      border-radius: 4px;
-    }
+.users-list h3 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
 
-    .leave-button {
-      margin-top: 1rem;
-      width: 100%;
-      padding: 0.75rem;
-      background-color: #e74c3c;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
+.users-list ul {
+  list-style: none;
+}
 
-      &:hover {
-        background-color: #ab2a1c;
-      }
-    }
-  }
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  font-size: 0.9rem;
+}
 
-  .editor-wrapper {
-    flex-grow: 1;
-    background-color: #fff;
-  }
+.avatar {
+  min-width: 24px;
+  width: 24px;
+  height: 24px;
+  background: var(--primary-color);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+.username {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.leave-btn {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid var(--danger-red);
+  color: var(--danger-red);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.leave-btn:hover {
+  background: var(--danger-red);
+  color: white;
+}
+
+/* Main Area */
+.main-area {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-dark);
+  overflow: hidden; /* Ensure editor doesn't break layout */
+}
+
+.toolbar {
+  height: 50px;
+  background: var(--bg-header);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+}
+
+.lang-select {
+  background: var(--bg-dark);
+  color: #fff;
+  border: 1px solid var(--border-color);
+  padding: 5px 10px;
+  outline: none;
+  cursor: pointer;
+}
+
+.right-tools {
+  display: flex;
+  align-items: center;
+}
+
+.typing-indicator {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.editor-wrapper {
+  flex-grow: 1;
+  min-height: 0; 
+  position: relative;
 }
