@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import "./App.css";
 import io from "socket.io-client";
 import Editor from "@monaco-editor/react";
@@ -10,7 +10,7 @@ const SOCKET_OPTIONS = {
   reconnectionDelay: 1000,
 };
 
-// --- Custom Hook: useRoom (Business Logic Layer) ---
+// --- Custom Hook: useRoom (Logic) ---
 const useRoom = () => {
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -24,7 +24,6 @@ const useRoom = () => {
   const [typing, setTyping] = useState("");
   const [toasts, setToasts] = useState([]);
 
-  // Toast Helper
   const addToast = useCallback((message, type = "info") => {
     const id = Date.now();
     setToasts((prev) => [...prev, { id, message, type }]);
@@ -33,54 +32,33 @@ const useRoom = () => {
     }, 3000);
   }, []);
 
-  // Initialize Socket
   useEffect(() => {
     const s = io(SERVER_URL, SOCKET_OPTIONS);
     setSocket(s);
-
-    s.on("connect", () => {
-      setIsConnected(true);
-    });
-
+    s.on("connect", () => setIsConnected(true));
     s.on("disconnect", () => {
       setIsConnected(false);
       addToast("Disconnected from server", "error");
     });
-
-    s.on("connect_error", (err) => {
-      setIsConnected(false);
-      console.error("Connection error:", err);
-    });
-
-    return () => {
-      s.disconnect();
-    };
+    return () => s.disconnect();
   }, [addToast]);
 
-  // Socket Event Listeners
   useEffect(() => {
     if (!socket) return;
-
     socket.on("userJoined", (updatedUsers) => {
       setUsers(updatedUsers);
       addToast("A new user joined the room", "success");
     });
-
-    socket.on("codeUpdate", (newCode) => {
-      setCode(newCode);
-    });
-
+    socket.on("codeUpdate", (newCode) => setCode(newCode));
     socket.on("userTyping", (user) => {
       setTyping(`${user.slice(0, 10)}... is typing`);
       const timer = setTimeout(() => setTyping(""), 2000);
       return () => clearTimeout(timer);
     });
-
     socket.on("languageUpdate", (newLanguage) => {
       setLanguage(newLanguage);
       addToast(`Language changed to ${newLanguage}`, "info");
     });
-
     return () => {
       socket.off("userJoined");
       socket.off("codeUpdate");
@@ -89,7 +67,6 @@ const useRoom = () => {
     };
   }, [socket, addToast]);
 
-  // Actions
   const joinRoom = () => {
     if (roomId && userName && socket) {
       socket.emit("join", { roomId, userName, agenda });
@@ -107,7 +84,6 @@ const useRoom = () => {
     setUserName("");
     setAgenda("");
     setCode("// start code here");
-    setLanguage("javascript");
   };
 
   const updateCode = (newCode) => {
@@ -124,38 +100,61 @@ const useRoom = () => {
   };
 
   const emitCursorPosition = (position) => {
-    if (socket) {
-      socket.emit("cursorChange", { roomId, userName, position });
-    }
+    if (socket) socket.emit("cursorChange", { roomId, userName, position });
   };
 
   return {
-    socket, isConnected, joined,
-    roomId, setRoomId,
-    userName, setUserName,
-    agenda, setAgenda,
-    language, code, users, typing, toasts,
+    socket, isConnected, joined, roomId, setRoomId, userName, setUserName,
+    agenda, setAgenda, language, code, users, typing, toasts,
     joinRoom, leaveRoom, updateCode, updateLanguage, emitCursorPosition, addToast
   };
 };
 
+// --- Helper Component: ScrollReveal ---
+// Adds a "fade-in-up" animation when elements scroll into view
+const ScrollReveal = ({ children }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className={`reveal ${isVisible ? "active" : ""}`}>
+      {children}
+    </div>
+  );
+};
+
 // --- Main Component ---
 const App = () => {
+  const roomData = useRoom();
   const {
     isConnected, joined, roomId, setRoomId, userName, setUserName,
     agenda, setAgenda, language, code, users, typing, toasts,
     joinRoom, leaveRoom, updateCode, updateLanguage, emitCursorPosition, addToast
-  } = useRoom();
+  } = roomData;
 
   const [sidebarWidth, setSidebarWidth] = useState(250);
   const [isResizing, setIsResizing] = useState(false);
 
-  // Resizing Logic
+  // Resize Logic
   const startResizing = () => setIsResizing(true);
   const stopResizing = () => setIsResizing(false);
   const resize = useCallback((e) => {
-    if (isResizing) {
-      if (e.clientX > 200 && e.clientX < 600) setSidebarWidth(e.clientX);
+    if (isResizing && e.clientX > 200 && e.clientX < 600) {
+      setSidebarWidth(e.clientX);
     }
   }, [isResizing]);
 
@@ -174,30 +173,31 @@ const App = () => {
   };
 
   const generateRoomId = () => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setRoomId(id);
+    setRoomId(Math.random().toString(36).substring(2, 9));
   };
 
-  const handleEditorMount = (editor, monaco) => {
-    editor.onDidChangeCursorPosition((e) => {
-      emitCursorPosition(e.position);
-    });
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // --- RENDER: LANDING PAGE ---
   if (!joined) {
     return (
       <div className="landing-page">
+        <div className="ambient-light"></div>
+        
         {/* Navigation */}
         <nav className="navbar">
-          <div className="nav-logo">
-            <span className="logo-icon">{`</>`}</span> Collab Code
-          </div>
-          <div className="nav-links">
-            <a href="#features">Features</a>
-            <a href="https://github.com/akshatpandey" target="_blank" rel="noreferrer">GitHub</a>
-            <div className={`status-badge ${isConnected ? "online" : "offline"}`}>
-              {isConnected ? "System Online" : "Connecting..."}
+          <div className="nav-container">
+            <div className="nav-logo">
+              <span className="logo-icon">{`</>`}</span> Collab Code
+            </div>
+            <div className="nav-links">
+              <a href="#how-it-works">How it works</a>
+              <a href="#features">Features</a>
+              <a href="https://github.com/AkshatPandey2006" target="_blank" rel="noreferrer">
+                <svg height="20" viewBox="0 0 16 16" version="1.1" width="20" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+              </a>
             </div>
           </div>
         </nav>
@@ -205,83 +205,183 @@ const App = () => {
         {/* Hero Section */}
         <section className="hero-section">
           <div className="hero-content">
-            <h1>Code together, <br /><span className="text-gradient">in real-time.</span></h1>
+            <div className="badge">v2.0 Now Live</div>
+            <h1>Real-time collaboration for <br /><span className="text-gradient">modern developers.</span></h1>
             <p className="hero-subtitle">
-              A lightweight, distraction-free collaborative code editor for developers, 
-              interviewers, and friends. No signup required.
+              Instant code synchronization, syntax highlighting for 4+ languages, and a distraction-free environment. 
+              Open source and ready for your next interview or hackathon.
             </p>
-            <div className="hero-features-list">
-              <span>⚡ Instant Sync</span>
-              <span>🔒 Secure Rooms</span>
-              <span>🎨 Syntax Highlighting</span>
+            
+            <div className="stats-row">
+              <div className="stat">
+                <span className="stat-val">0ms</span>
+                <span className="stat-label">Latency</span>
+              </div>
+              <div className="stat">
+                <span className="stat-val">100%</span>
+                <span className="stat-label">Free</span>
+              </div>
+              <div className="stat">
+                <span className="stat-val">4+</span>
+                <span className="stat-label">Langs</span>
+              </div>
             </div>
           </div>
 
-          {/* Join Form Card */}
-          <div className="join-card">
-            <div className="card-header">
-              <h2>Start Coding</h2>
-              <div className={`status-dot ${isConnected ? "online" : "offline"}`} 
-                   title={isConnected ? "Server Online" : "Connecting..."}></div>
-            </div>
-            
-            <div className="input-group">
-              <div className="room-id-wrapper">
+          {/* Join Card */}
+          <div className="join-card-wrapper">
+            <div className="join-card">
+              <div className="card-header">
+                <h2>Start Coding</h2>
+                <div className={`status-dot ${isConnected ? "online" : "offline"}`} 
+                     title={isConnected ? "Server Online" : "Connecting..."}></div>
+              </div>
+              
+              <div className="input-group">
+                <div className="room-id-wrapper">
+                  <input
+                    type="text"
+                    placeholder="Room ID"
+                    value={roomId}
+                    onChange={(e) => setRoomId(e.target.value)}
+                    onKeyUp={(e) => e.key === "Enter" && joinRoom()}
+                  />
+                  <button className="btn-generate" onClick={generateRoomId}>Generate</button>
+                </div>
                 <input
                   type="text"
-                  placeholder="Room ID"
-                  value={roomId}
-                  onChange={(e) => setRoomId(e.target.value)}
+                  placeholder="Your Name"
+                  value={userName}
+                  onChange={(e) => setUserName(e.target.value)}
                   onKeyUp={(e) => e.key === "Enter" && joinRoom()}
                 />
-                <button className="btn-generate" onClick={generateRoomId}>Generate</button>
+                <input
+                  type="text"
+                  placeholder="Agenda (Optional)"
+                  value={agenda}
+                  onChange={(e) => setAgenda(e.target.value)}
+                  onKeyUp={(e) => e.key === "Enter" && joinRoom()}
+                />
               </div>
-              <input
-                type="text"
-                placeholder="Your Name"
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
-                onKeyUp={(e) => e.key === "Enter" && joinRoom()}
-              />
-              <input
-                type="text"
-                placeholder="Agenda (Optional)"
-                value={agenda}
-                onChange={(e) => setAgenda(e.target.value)}
-                onKeyUp={(e) => e.key === "Enter" && joinRoom()}
-              />
+              <button onClick={joinRoom} className="btn-join" disabled={!isConnected}>
+                {isConnected ? "Join Room" : "Connecting..."}
+              </button>
             </div>
-            <button onClick={joinRoom} className="btn-join" disabled={!isConnected}>
-              {isConnected ? "Join Room" : "Connecting..."}
-            </button>
+            {/* Decoration behind card */}
+            <div className="card-decoration"></div>
           </div>
         </section>
 
         {/* Features Grid */}
-        <section id="features" className="features-section">
-          <h2>Why use Collab Code?</h2>
+        <section id="features" className="section-padding">
+          <div className="section-header">
+            <h2>Everything you need</h2>
+            <p>Built for speed, reliability, and developer experience.</p>
+          </div>
+          
           <div className="features-grid">
-            <div className="feature-card">
-              <div className="icon">🚀</div>
-              <h3>Low Latency</h3>
-              <p>Powered by Socket.io for millisecond-level synchronization across all connected clients.</p>
-            </div>
-            <div className="feature-card">
-              <div className="icon">💻</div>
-              <h3>Monaco Editor</h3>
-              <p>The same powerful code editor that powers VS Code, right in your browser.</p>
-            </div>
-            <div className="feature-card">
-              <div className="icon">🌍</div>
-              <h3>Multi-Language</h3>
-              <p>Support for JavaScript, Python, C++, and Java with intelligent syntax highlighting.</p>
-            </div>
+            <ScrollReveal>
+              <div className="feature-card">
+                <div className="icon-box">⚡</div>
+                <h3>Lightning Fast Sync</h3>
+                <p>Powered by Socket.io, changes are broadcasted in milliseconds. No refresh needed.</p>
+              </div>
+            </ScrollReveal>
+            
+            <ScrollReveal>
+              <div className="feature-card">
+                <div className="icon-box">🎨</div>
+                <h3>Monaco Editor</h3>
+                <p>The full power of VS Code in your browser. IntelliSense, minimap, and formatting.</p>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal>
+              <div className="feature-card">
+                <div className="icon-box">🛡️</div>
+                <h3>Private Rooms</h3>
+                <p>Generate a unique room ID and share it only with the people you want to collaborate with.</p>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal>
+              <div className="feature-card">
+                <div className="icon-box">👥</div>
+                <h3>Live Presence</h3>
+                <p>See who is online, who is typing, and track active users in the sidebar.</p>
+              </div>
+            </ScrollReveal>
           </div>
         </section>
 
-        {/* Simple Footer */}
+        {/* How It Works */}
+        <section id="how-it-works" className="section-padding alt-bg">
+          <div className="section-header">
+            <h2>How it works</h2>
+            <p>Get started in less than 10 seconds.</p>
+          </div>
+
+          <div className="steps-container">
+            <ScrollReveal>
+              <div className="step-item">
+                <div className="step-number">01</div>
+                <h3>Create a Room</h3>
+                <p>Click "Generate" to create a unique Room ID or enter a custom one.</p>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal>
+              <div className="step-item">
+                <div className="step-number">02</div>
+                <h3>Share the ID</h3>
+                <p>Copy the ID and send it to your friends or teammates.</p>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal>
+              <div className="step-item">
+                <div className="step-number">03</div>
+                <h3>Start Coding</h3>
+                <p>Everyone joins the room and starts editing the same file instantly.</p>
+              </div>
+            </ScrollReveal>
+          </div>
+        </section>
+
+        {/* Bottom CTA */}
+        <section className="cta-section">
+          <ScrollReveal>
+            <div className="cta-content">
+              <h2>Ready to collaborate?</h2>
+              <p>No account required. Open source. Free forever.</p>
+              <button className="btn-large" onClick={scrollToTop}>Start Coding Now</button>
+            </div>
+          </ScrollReveal>
+        </section>
+
+        {/* Footer */}
         <footer className="landing-footer">
-          <p>© {new Date().getFullYear()} Collab Code. Built by Akshat Pandey.</p>
+          <div className="footer-content">
+            <div className="footer-col">
+              <h4>Collab Code</h4>
+              <p>Real-time collaboration made simple.</p>
+            </div>
+            <div className="footer-col">
+              <h4>Links</h4>
+              <a href="https://github.com/AkshatPandey2006" target="_blank" rel="noreferrer">GitHub</a>
+              <a href="#features">Features</a>
+              <a href="#how-it-works">How-to</a>
+            </div>
+            <div className="footer-col">
+              <h4>Connect</h4>
+              <a href="https://github.com/AkshatPandey2006" target="_blank" rel="noreferrer">
+                 Follow @AkshatPandey2006
+              </a>
+            </div>
+          </div>
+          <div className="footer-bottom">
+            <p>© {new Date().getFullYear()} Collab Code. Built with ❤️ by <a href="https://github.com/AkshatPandey2006" target="_blank" rel="noreferrer" className="author-link">Akshat Pandey</a>.</p>
+          </div>
         </footer>
 
         {/* Toast Container */}
@@ -296,7 +396,7 @@ const App = () => {
     );
   }
 
-  // --- RENDER: EDITOR ---
+  // --- RENDER: EDITOR (Authenticated) ---
   return (
     <div className="editor-container">
       <div className="sidebar" style={{ width: sidebarWidth }}>
@@ -358,7 +458,6 @@ const App = () => {
             language={language}
             value={code}
             onChange={updateCode}
-            onMount={handleEditorMount}
             theme="vs-dark"
             options={{
               minimap: { enabled: false },
@@ -384,12 +483,10 @@ const App = () => {
   );
 };
 
-// Helper to generate consistent avatar colors
+// Helper
 const stringToColor = (str) => {
   let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
   const c = (hash & 0x00ffffff).toString(16).toUpperCase();
   return "#" + "00000".substring(0, 6 - c.length) + c;
 };
