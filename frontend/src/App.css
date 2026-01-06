@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap');
 
 :root {
   --blue: #3b82f6;
@@ -19,7 +19,7 @@ body {
   background: var(--bg-dark);
   color: var(--text-main);
   font-family: 'Inter', sans-serif;
-  overflow: hidden;
+  /* FIX: Removed global overflow:hidden so landing page can scroll */
 }
 
 /* Backgrounds */
@@ -39,19 +39,39 @@ body {
   filter: blur(80px); pointer-events: none; z-index: -1;
 }
 
-/* Landing Page */
-.landing-container { height: 100vh; display: flex; flex-direction: column; }
-.navbar { padding: 0 40px; height: 70px; display: flex; align-items: center; border-bottom: 1px solid var(--border); background: rgba(5,5,5,0.8); backdrop-filter: blur(10px); }
-.nav-content { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+/* --- LANDING PAGE (SCROLLABLE) --- */
+.landing-container { 
+  min-height: 100vh; /* Allow it to grow */
+  display: flex; 
+  flex-direction: column;
+  overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+.navbar { 
+  position: fixed; top: 0; width: 100%; height: 70px; 
+  display: flex; align-items: center; padding: 0 40px;
+  border-bottom: 1px solid var(--border); 
+  background: rgba(5,5,5,0.8); backdrop-filter: blur(10px); 
+  z-index: 100;
+}
+
+.nav-content { width: 100%; display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; }
 .logo { font-weight: 800; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
 .logo-glitch { color: var(--blue); font-family: 'Fira Code', monospace; }
 .status-pill { font-size: 0.75rem; display: flex; align-items: center; gap: 8px; color: #888; border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; }
 .status-pill.online .dot { background: var(--green); box-shadow: 0 0 8px var(--green); }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: #555; }
 
-.hero-center { flex: 1; display: flex; align-items: center; justify-content: center; padding-bottom: 80px; }
+/* Hero Section */
+.hero-center { 
+  min-height: 100vh; /* Take full screen initially */
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  padding-top: 80px; /* Offset for fixed navbar */
+}
 
-/* Join Panel (Glass) */
+/* Join Panel */
 .join-panel {
   width: 400px; background: rgba(20, 20, 20, 0.6);
   border: 1px solid var(--border); border-top: 1px solid rgba(255,255,255,0.15);
@@ -87,8 +107,67 @@ body {
 }
 .primary-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(59, 130, 246, 0.5); }
 
-/* --- APP LAYOUT --- */
-.app-container { display: flex; height: 100vh; overflow: hidden; }
+/* --- SECTIONS (Features, How-to, FAQ) --- */
+.features, .how-it-works, .faq-section {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 100px 24px;
+  width: 100%;
+}
+
+.section-header { text-align: center; margin-bottom: 60px; }
+.section-header h2 { font-size: 2rem; font-weight: 700; margin-bottom: 10px; }
+.section-header p { color: var(--text-dim); }
+
+/* Bento Grid */
+.bento-grid { 
+  display: grid; 
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+  gap: 24px; 
+}
+.bento-card {
+  background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+  padding: 30px; border-radius: 12px; transition: 0.3s;
+}
+.bento-card:hover { border-color: var(--blue-glow); transform: translateY(-5px); }
+.card-icon { color: var(--blue); margin-bottom: 15px; }
+.bento-card h3 { font-size: 1.1rem; margin-bottom: 10px; font-weight: 600; }
+.bento-card p { color: var(--text-dim); font-size: 0.9rem; line-height: 1.6; }
+.highlight { color: var(--blue); }
+
+/* Steps */
+.steps-wrapper { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; }
+.step-card { flex: 1; text-align: center; min-width: 250px; }
+.step-number { 
+  font-size: 1rem; color: var(--blue); background: rgba(59, 130, 246, 0.1); 
+  width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; 
+  border-radius: 50%; margin: 0 auto 16px; font-weight: 700; border: 1px solid rgba(59, 130, 246, 0.2);
+}
+.step-connector { height: 1px; background: #222; flex: 0.5; margin-top: 20px; display: none; }
+@media(min-width: 768px) { .step-connector { display: block; } }
+
+/* FAQ */
+.faq-grid { max-width: 700px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+.faq-item { border-bottom: 1px solid var(--border); }
+.faq-question { padding: 20px 0; cursor: pointer; display: flex; justify-content: space-between; font-weight: 500; }
+.faq-answer { padding-bottom: 20px; color: var(--text-dim); font-size: 0.9rem; display: none; }
+.faq-item.open .faq-answer { display: block; animation: slideDown 0.3s ease; }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Footer */
+.footer { border-top: 1px solid var(--border); background: #000; padding: 60px 0; font-size: 0.85rem; margin-top: auto; }
+.footer-content { max-width: 1100px; margin: 0 auto; padding: 0 24px; display: flex; justify-content: space-between; }
+.footer-left p { color: #555; margin-top: 10px; }
+.logo-small { font-weight: 700; }
+.footer-links a { color: #666; text-decoration: none; margin-left: 20px; }
+.footer-links a:hover { color: var(--blue); }
+
+/* --- APP LAYOUT (FIXED, NO SCROLL) --- */
+.app-container { 
+  height: 100vh; 
+  display: flex; 
+  overflow: hidden; /* Lock scroll for app mode */
+}
 
 /* Sidebar */
 .sidebar { 
@@ -174,3 +253,11 @@ body {
 @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 .fade-in-up { animation: fadeInUp 0.5s ease-out; }
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Mobile */
+@media (max-width: 768px) {
+  .hero-center { padding-top: 100px; }
+  .join-panel { width: 90%; }
+  .bento-grid { grid-template-columns: 1fr; }
+  .nav-content { padding: 0 20px; }
+}
