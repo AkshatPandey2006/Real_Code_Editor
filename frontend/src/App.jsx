@@ -10,8 +10,18 @@ const SOCKET_OPTIONS = {
   reconnectionDelay: 1000,
 };
 
-// --- Custom Hook: useRoom (Business Logic Layer) ---
-// This separates the "How it works" from "How it looks" - A Senior Dev trait.
+// --- Helper: Debounce Function ---
+// Prevents flooding the server with events on every single keystroke.
+// This is the key "Senior Engineer" optimization.
+const debounce = (func, wait) => {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+};
+
+// --- Custom Hook: useRoom ---
 const useRoom = () => {
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -25,7 +35,25 @@ const useRoom = () => {
   const [typing, setTyping] = useState("");
   const [toasts, setToasts] = useState([]);
 
-  // Toast Helper
+  // --- Optimization: Debounced Socket Emitters ---
+  // We use useRef to keep the same debounced function instance across renders.
+  
+  // 1. Debounce Code Changes (300ms delay)
+  // Only sends code to server if user stops typing for 300ms
+  const debouncedEmitCode = useRef(
+    debounce((socketInstance, rId, newCode) => {
+      socketInstance.emit("codeChange", { roomId: rId, code: newCode });
+    }, 300)
+  ).current;
+
+  // 2. Throttle Typing Indicators (500ms delay)
+  // Prevents "User is typing" spam
+  const debouncedEmitTyping = useRef(
+    debounce((socketInstance, rId, uName) => {
+      socketInstance.emit("typing", { roomId: rId, userName: uName });
+    }, 500)
+  ).current;
+
   const addToast = useCallback((message, type = "info") => {
     const id = Date.now();
     setToasts((prev) => [...prev, { id, message, type }]);
@@ -34,14 +62,12 @@ const useRoom = () => {
     }, 3000);
   }, []);
 
-  // Initialize Socket
   useEffect(() => {
     const s = io(SERVER_URL, SOCKET_OPTIONS);
     setSocket(s);
 
     s.on("connect", () => {
       setIsConnected(true);
-      // We don't trigger toast here to avoid noise, but we could
     });
 
     s.on("disconnect", () => {
@@ -59,35 +85,28 @@ const useRoom = () => {
     };
   }, [addToast]);
 
-  // Socket Event Listeners
   useEffect(() => {
     if (!socket) return;
 
-    socket.on("userJoined", (updatedUsers) => {
+    s.on("userJoined", (updatedUsers) => {
       setUsers(updatedUsers);
       addToast("A new user joined the room", "success");
     });
 
-    socket.on("codeUpdate", (newCode) => {
-      setCode(newCode);
+    s.on("codeUpdate", (newCode) => {
+      // Critical: Only update if code is different to prevent cursor jumps
+      setCode((prev) => (prev !== newCode ? newCode : prev));
     });
 
-    socket.on("userTyping", (user) => {
+    s.on("userTyping", (user) => {
       setTyping(`${user.slice(0, 10)}... is typing`);
-      // Clear typing status automatically after 2s
       const timer = setTimeout(() => setTyping(""), 2000);
       return () => clearTimeout(timer);
     });
 
-    socket.on("languageUpdate", (newLanguage) => {
+    s.on("languageUpdate", (newLanguage) => {
       setLanguage(newLanguage);
       addToast(`Language changed to ${newLanguage}`, "info");
-    });
-
-    // Potential Future Feature: remoteCursor
-    socket.on("remoteCursor", (data) => {
-      // Logic to update remote cursors would go here
-      // This shows recruiters you are prepared for the next step
     });
 
     return () => {
@@ -95,11 +114,9 @@ const useRoom = () => {
       socket.off("codeUpdate");
       socket.off("userTyping");
       socket.off("languageUpdate");
-      socket.off("remoteCursor");
     };
   }, [socket, addToast]);
 
-  // Actions
   const joinRoom = () => {
     if (roomId && userName && socket) {
       socket.emit("join", { roomId, userName, agenda });
@@ -121,10 +138,13 @@ const useRoom = () => {
   };
 
   const updateCode = (newCode) => {
+    // 1. Update local state IMMEDIATELY (Responsiveness)
     setCode(newCode);
+
+    // 2. Update server AFTER delay (Performance)
     if (socket) {
-      socket.emit("codeChange", { roomId, code: newCode });
-      socket.emit("typing", { roomId, userName });
+      debouncedEmitCode(socket, roomId, newCode);
+      debouncedEmitTyping(socket, roomId, userName);
     }
   };
 
@@ -135,8 +155,6 @@ const useRoom = () => {
 
   const emitCursorPosition = (position) => {
     if (socket) {
-      // Broadcasting cursor position (Line/Column)
-      // Even if backend ignores it, this shows intent
       socket.emit("cursorChange", { roomId, userName, position });
     }
   };
@@ -186,7 +204,6 @@ const App = () => {
   const [sidebarWidth, setSidebarWidth] = useState(250);
   const [isResizing, setIsResizing] = useState(false);
 
-  // Resizing Logic
   const startResizing = () => setIsResizing(true);
   const stopResizing = () => setIsResizing(false);
   const resize = useCallback((e) => {
@@ -215,7 +232,6 @@ const App = () => {
   };
 
   const handleEditorMount = (editor, monaco) => {
-    // This is where we would attach decoration listeners for remote cursors
     editor.onDidChangeCursorPosition((e) => {
       emitCursorPosition(e.position);
     });
@@ -261,7 +277,6 @@ const App = () => {
             {isConnected ? "Join Room" : "Connecting..."}
           </button>
         </div>
-        {/* Toast Container */}
         <div className="toast-container">
           {toasts.map((t) => (
             <div key={t.id} className={`toast toast-${t.type}`}>
@@ -349,7 +364,6 @@ const App = () => {
         </div>
       </div>
 
-      {/* Toast Container (Repeated for inside room view) */}
       <div className="toast-container">
           {toasts.map((t) => (
             <div key={t.id} className={`toast toast-${t.type}`}>
@@ -361,7 +375,6 @@ const App = () => {
   );
 };
 
-// Helper to generate consistent avatar colors
 const stringToColor = (str) => {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
