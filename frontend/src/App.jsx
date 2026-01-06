@@ -3,7 +3,9 @@ import "./App.css";
 import io from "socket.io-client";
 import Editor from "@monaco-editor/react";
 
-const SERVER_URL = "https://real-time-code-9ui2.onrender.com/";
+// Ensure this URL is correct for your deployed backend
+const SERVER_URL = "https://real-time-code-9ui2.onrender.com/"; 
+
 const SOCKET_OPTIONS = {
   reconnectionAttempts: 5,
   reconnectionDelay: 1000,
@@ -43,16 +45,16 @@ const useRoom = () => {
   useEffect(() => {
     if (!socket) return;
     
-    socket.on("updateUserList", (updatedUsers) => {
-      setUsers(updatedUsers);
+    // FIX: Listen for 'userJoined' which now contains the LIST (matching similar project)
+    socket.on("userJoined", (updatedUsers) => {
+      if (Array.isArray(updatedUsers)) {
+        setUsers(updatedUsers);
+      }
     });
 
-    socket.on("userJoined", (user) => {
-      addToast(`${user} joined the room`, "success");
-    });
-
-    socket.on("userLeft", (user) => {
-      addToast(`${user} left the room`, "warning");
+    // FIX: Listen for separate notifications
+    socket.on("notification", (msg) => {
+      addToast(msg, "success");
     });
 
     socket.on("codeUpdate", (newCode) => setCode(newCode));
@@ -69,15 +71,15 @@ const useRoom = () => {
     });
 
     return () => {
-      socket.off("updateUserList");
       socket.off("userJoined");
-      socket.off("userLeft");
+      socket.off("notification");
       socket.off("codeUpdate");
       socket.off("userTyping");
       socket.off("languageUpdate");
     };
   }, [socket, addToast]);
 
+  // ... (Rest of your component logic remains exactly the same) ...
   const joinRoom = () => {
     if (roomId && userName && socket) {
       socket.emit("join", { roomId, userName, agenda });
@@ -189,9 +191,9 @@ const App = () => {
 
         <nav className="navbar">
           <div className="nav-content">
-            <div className="logo"><span className="logo-glitch">{`</>`}</span> Collab Code</div>
+            <div className="logo"><span className="logo-glitch">{`</>`}</span> CollabCode</div>
             <div className="nav-right">
-                <a href="https://github.com/AkshatPandey2006/Real_Code_Editor" target="_blank" className="github-link"><Icons.Github /> <span>Star on GitHub</span></a>
+                <a href="https://github.com/AkshatPandey2006" target="_blank" className="github-link"><Icons.Github /> <span>Star on GitHub</span></a>
                 <div className={`status-pill ${isConnected ? 'online' : 'offline'}`}>
                 <div className="dot"></div> {isConnected ? "System Online" : "Connecting..."}
                 </div>
@@ -210,7 +212,7 @@ const App = () => {
                     </div>
                     <h1 className="hero-title">
                         Lightning-fast <br />
-                        collab coding. <br />
+                        collab coding, <br />
                         <span className="gradient-text">Zero friction.</span>
                     </h1>
                     <p className="hero-sub">
@@ -354,7 +356,8 @@ const App = () => {
             </div>
             <div className="footer-links">
               <a href="https://github.com/AkshatPandey2006" target="_blank">GitHub</a>
-              <a href="https://www.linkedin.com/in/akshatpandey2006/">LinkedIn</a>
+              <a href="#">Twitter</a>
+              <a href="#">Status</a>
             </div>
           </div>
         </footer>
