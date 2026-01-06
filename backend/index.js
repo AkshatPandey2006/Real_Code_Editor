@@ -8,7 +8,7 @@ const app = express();
 const server = http.createServer(app);
 
 // Keep your self-ping logic
-const url = `https://realtime-code-editor-zwp3.onrender.com`;
+const url = `https://real-time-code-9ui2.onrender.com/`;
 const interval = 30000;
 
 function reloadWebsite() {
