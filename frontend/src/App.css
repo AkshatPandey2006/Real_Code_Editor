@@ -7,6 +7,9 @@
   --text-main: #cccccc;
   --text-dim: #858585;
   --danger-red: #e74c3c;
+  --success-green: #28a745;
+  --warning-yellow: #ffc107;
+  --shadow-lg: 0 10px 30px rgba(0,0,0,0.5);
 }
 
 * {
@@ -16,90 +19,106 @@
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Inter', 'Segoe UI', sans-serif; /* Cleaner font stack */
   background-color: var(--bg-dark);
   color: var(--text-main);
   height: 100vh;
   overflow: hidden;
 }
 
-/* Join Screen - Square Look */
+/* --- Join Screen --- */
 .join-container {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background: #1e1e1e; /* Flat background for cleaner look */
+  background: var(--bg-dark);
 }
 
 .join-form {
   background: var(--bg-sidebar);
   padding: 2.5rem;
-  /* Removed border-radius for square look */
   border: 1px solid var(--border-color);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  text-align: center;
-  width: 360px;
+  box-shadow: var(--shadow-lg);
+  width: 380px;
+  position: relative;
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
 }
 
 .join-form h1 {
-  margin-bottom: 2rem;
-  font-weight: 400; /* Lighter font weight for elegance */
+  font-size: 1.5rem;
+  font-weight: 500;
   color: #fff;
-  letter-spacing: 1px;
+  letter-spacing: -0.5px;
+}
+
+/* Status Dot */
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--text-dim);
+}
+.status-dot.online {
+  background-color: var(--success-green);
+  box-shadow: 0 0 10px var(--success-green);
 }
 
 .input-group {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  margin-bottom: 25px;
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
-/* Inputs - Square Look */
 .input-group input {
   width: 100%;
-  padding: 12px;
+  padding: 12px 14px;
   background: var(--bg-dark);
   border: 1px solid var(--border-color);
   color: #fff;
-  /* Removed border-radius */
   outline: none;
   font-size: 0.95rem;
-  transition: border-color 0.2s;
+  transition: all 0.2s ease;
 }
 
 .input-group input:focus {
   border-color: var(--primary-color);
+  background: #252526;
 }
 
 .room-id-wrapper {
   position: relative;
-  display: flex;
-  align-items: center;
 }
 
 .room-id-wrapper input {
-  padding-right: 80px;
+  padding-right: 90px;
 }
 
 .btn-generate {
   position: absolute;
-  right: 5px;
+  right: 6px;
   top: 50%;
   transform: translateY(-50%);
-  background: #3e3e42;
-  color: #fff;
-  border: 1px solid #555;
-  padding: 5px 10px;
+  background: #333;
+  color: var(--text-main);
+  border: 1px solid #444;
+  padding: 4px 10px;
   font-size: 0.75rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: 0.2s;
 }
 
 .btn-generate:hover {
   background: var(--primary-color);
   border-color: var(--primary-color);
+  color: #fff;
 }
 
 .btn-join {
@@ -114,11 +133,16 @@ body {
   transition: background 0.2s;
 }
 
-.btn-join:hover {
+.btn-join:hover:not(:disabled) {
   background: #006bb3;
 }
 
-/* Editor Layout */
+.btn-join:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* --- Editor Layout --- */
 .editor-container {
   display: flex;
   height: 100vh;
@@ -127,72 +151,89 @@ body {
 
 /* Sidebar */
 .sidebar {
-  /* Removed static width, now handled by inline style in JSX */
   background: var(--bg-sidebar);
-  /* Removed border-right, now handled by resizer */
   display: flex;
   flex-direction: column;
   padding: 1rem;
-  overflow: hidden; /* Prevent content spill during resize */
-  min-width: 150px; /* Safety min width */
+  overflow: hidden;
+  min-width: 200px;
+  z-index: 2;
 }
 
-/* Resizer Handle */
 .resizer {
   width: 4px;
-  background-color: var(--bg-dark);
+  background: var(--bg-dark);
   border-left: 1px solid var(--border-color);
   cursor: col-resize;
-  transition: background-color 0.2s;
-  z-index: 10;
+  transition: 0.2s;
+  z-index: 3;
 }
-
 .resizer:hover, .resizer:active {
-  background-color: var(--primary-color);
+  background: var(--primary-color);
 }
 
 .sidebar-header {
   margin-bottom: 2rem;
 }
 
-.sidebar-header h2 {
-  font-size: 1.1rem;
+.agenda-box h2 {
+  font-size: 1rem;
   font-weight: 600;
   color: #fff;
-  margin-bottom: 10px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+
+.connection-status {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 15px;
+}
+
+.status-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-dim);
+}
+.status-indicator.connected {
+  background: var(--success-green);
 }
 
 .room-id-box {
   background: var(--bg-dark);
-  padding: 8px;
+  padding: 8px 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 10px;
   border: 1px solid var(--border-color);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+  font-family: 'Fira Code', monospace;
 }
 
 .copy-btn {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--text-main);
+  font-size: 1rem;
 }
 
 .users-list {
   flex-grow: 1;
-  overflow-y: auto; /* Allow scrolling if many users */
+  overflow-y: auto;
 }
 
 .users-list h3 {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
   color: var(--text-dim);
-  margin-bottom: 10px;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
 }
 
 .users-list ul {
@@ -202,28 +243,29 @@ body {
 .user-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 0;
+  gap: 12px;
+  padding: 8px 0;
   font-size: 0.9rem;
 }
 
 .avatar {
-  min-width: 24px;
-  width: 24px;
-  height: 24px;
-  background: var(--primary-color);
-  border-radius: 50%;
+  min-width: 28px;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px; /* Square-ish avatar for dev tool feel */
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 0.7rem;
-  font-weight: bold;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
 .username {
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .leave-btn {
@@ -233,12 +275,13 @@ body {
   border: 1px solid var(--danger-red);
   color: var(--danger-red);
   cursor: pointer;
-  transition: all 0.3s;
+  font-weight: 500;
+  transition: all 0.2s;
 }
 
 .leave-btn:hover {
   background: var(--danger-red);
-  color: white;
+  color: #fff;
 }
 
 /* Main Area */
@@ -247,7 +290,6 @@ body {
   display: flex;
   flex-direction: column;
   background: var(--bg-dark);
-  overflow: hidden; /* Ensure editor doesn't break layout */
 }
 
 .toolbar {
@@ -257,31 +299,64 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1rem;
+  padding: 0 20px;
 }
 
 .lang-select {
   background: var(--bg-dark);
   color: #fff;
   border: 1px solid var(--border-color);
-  padding: 5px 10px;
+  padding: 6px 12px;
   outline: none;
   cursor: pointer;
-}
-
-.right-tools {
-  display: flex;
-  align-items: center;
+  font-size: 0.9rem;
 }
 
 .typing-indicator {
   font-size: 0.8rem;
-  color: var(--text-dim);
+  color: var(--success-green);
   font-style: italic;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
 }
 
 .editor-wrapper {
   flex-grow: 1;
-  min-height: 0; 
   position: relative;
+}
+
+/* --- Toast Notifications --- */
+.toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 1000;
+}
+
+.toast {
+  background: #333;
+  color: #fff;
+  padding: 12px 20px;
+  border-left: 4px solid var(--primary-color);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  font-size: 0.9rem;
+  animation: slideIn 0.3s ease;
+  min-width: 250px;
+}
+
+.toast-success { border-left-color: var(--success-green); }
+.toast-error { border-left-color: var(--danger-red); }
+.toast-info { border-left-color: var(--primary-color); }
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
