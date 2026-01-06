@@ -360,3 +360,94 @@ body {
   from { transform: translateX(100%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
 }
+
+/* --- Command Palette (The "Pro" Feature) --- */
+.cmd-palette-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6); /* Dim background */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 15vh;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.cmd-palette {
+  width: 500px;
+  background: #252526;
+  border: 1px solid #454545;
+  border-radius: 8px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  animation: popIn 0.2s ease-out;
+}
+
+@keyframes popIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.cmd-input {
+  width: 100%;
+  padding: 15px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #3e3e42;
+  color: #fff;
+  font-size: 1.1rem;
+  outline: none;
+}
+
+.cmd-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.cmd-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 15px;
+  color: #cccccc;
+  cursor: pointer;
+  border-left: 2px solid transparent;
+}
+
+.cmd-item:hover {
+  background: #2d2d2d;
+  border-left-color: var(--primary-color);
+  color: #fff;
+}
+
+.cmd-item.danger:hover {
+  border-left-color: var(--danger-red);
+}
+
+.shortcut {
+  font-size: 0.8rem;
+  background: #3e3e42;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #aaa;
+}
+
+/* Hint box in sidebar */
+.hint-box {
+    margin-top: auto;
+    padding: 10px;
+    font-size: 0.8rem;
+    color: #666;
+    text-align: center;
+    border-top: 1px solid #333;
+}
+
+.hint-box code {
+    background: #333;
+    padding: 2px 4px;
+    border-radius: 3px;
+    color: #ccc;
+}
