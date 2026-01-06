@@ -3,7 +3,7 @@ import "./App.css";
 import io from "socket.io-client";
 import Editor from "@monaco-editor/react";
 
-// Ensure this URL is correct for your deployed backend
+// Ensure this URL points to your deployed backend
 const SERVER_URL = "https://real-time-code-9ui2.onrender.com/"; 
 
 const SOCKET_OPTIONS = {
@@ -45,18 +45,11 @@ const useRoom = () => {
   useEffect(() => {
     if (!socket) return;
     
-    // FIX: Listen for 'userJoined' which now contains the LIST (matching similar project)
     socket.on("userJoined", (updatedUsers) => {
-      if (Array.isArray(updatedUsers)) {
-        setUsers(updatedUsers);
-      }
+      if (Array.isArray(updatedUsers)) setUsers(updatedUsers);
     });
 
-    // FIX: Listen for separate notifications
-    socket.on("notification", (msg) => {
-      addToast(msg, "success");
-    });
-
+    socket.on("notification", (msg) => addToast(msg, "success"));
     socket.on("codeUpdate", (newCode) => setCode(newCode));
     
     socket.on("userTyping", (user) => {
@@ -79,10 +72,13 @@ const useRoom = () => {
     };
   }, [socket, addToast]);
 
-  // ... (Rest of your component logic remains exactly the same) ...
   const joinRoom = () => {
     if (roomId && userName && socket) {
       socket.emit("join", { roomId, userName, agenda });
+      // If language was selected before join, sync it (optional logic depending on backend)
+      if(language !== "javascript") {
+          socket.emit("languageChange", { roomId, language });
+      }
       setJoined(true);
     } else {
       addToast("Room ID and Name required", "error");
@@ -112,12 +108,12 @@ const useRoom = () => {
 
   return {
     socket, isConnected, joined, roomId, setRoomId, userName, setUserName,
-    agenda, setAgenda, language, code, users, typing, toasts,
+    agenda, setAgenda, language, setLanguage, code, users, typing, toasts,
     joinRoom, leaveRoom, updateCode, updateLanguage, addToast
   };
 };
 
-// --- COMPONENTS ---
+// --- UI COMPONENTS ---
 const FadeIn = ({ children, delay = 0 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef(null);
@@ -148,6 +144,29 @@ const AccordionItem = ({ question, answer }) => {
   );
 };
 
+// CSS-Only Mock Editor Component
+const MockEditorVisual = () => {
+  return (
+    <div className="mock-window">
+      <div className="mock-header">
+        <div className="mock-dots">
+          <div className="dot red"></div>
+          <div className="dot yellow"></div>
+          <div className="dot green"></div>
+        </div>
+        <div className="mock-title">main.js — Collab</div>
+      </div>
+      <div className="mock-body">
+        <div className="code-line"><span className="keyword">const</span> <span className="var">sync</span> = <span className="string">"Instant"</span>;</div>
+        <div className="code-line"><span className="keyword">function</span> <span className="func">collaborate</span>() {'{'}</div>
+        <div className="code-line indent">  <span className="keyword">return</span> <span className="boolean">true</span>; <span className="cursor-indicator">|</span></div>
+        <div className="code-line">{'}'}</div>
+        <div className="code-line"><span className="comment">// Built on WebSockets</span></div>
+      </div>
+    </div>
+  );
+};
+
 const Icons = {
   ArrowRight: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>,
   Copy: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>,
@@ -162,7 +181,7 @@ const Icons = {
 const App = () => {
   const {
     isConnected, joined, roomId, setRoomId, userName, setUserName,
-    agenda, setAgenda, language, code, users, typing, toasts,
+    agenda, setAgenda, language, setLanguage, code, users, typing, toasts,
     joinRoom, leaveRoom, updateCode, updateLanguage, addToast
   } = useRoom();
 
@@ -191,7 +210,7 @@ const App = () => {
 
         <nav className="navbar">
           <div className="nav-content">
-            <div className="logo"><span className="logo-glitch">{`</>`}</span> Collab Code</div>
+            <div className="logo"><span className="logo-glitch">{`</>`}</span> CollabCode</div>
             <div className="nav-right">
                 <a href="https://github.com/AkshatPandey2006/Real_Code_Editor" target="_blank" className="github-link"><Icons.Github /> <span>Star on GitHub</span></a>
                 <div className={`status-pill ${isConnected ? 'online' : 'offline'}`}>
@@ -201,7 +220,7 @@ const App = () => {
           </div>
         </nav>
 
-        {/* HERO SECTION (2-Column Layout) */}
+        {/* HERO SECTION */}
         <section className="hero-section">
             <div className="hero-content-wrapper">
                 
@@ -212,25 +231,33 @@ const App = () => {
                     </div>
                     <h1 className="hero-title">
                         Lightning-fast <br />
-                        collab coding, <br />
+                        collaborative coding. <br />
                         <span className="gradient-text">Zero friction.</span>
                     </h1>
                     <p className="hero-sub">
+                        Built for interviews, pair programming, and competitive programming practice.
+                        <br/><br/>
                         Spin up instant coding rooms with a powerful, VS Code-like editor. 
-                        Powered by WebSockets for sub-30ms sync. No sign-ups, secure by default.
                     </p>
                     <div className="hero-cta">
                         <button className="primary-btn large" onClick={() => document.getElementById('join-box').scrollIntoView({ behavior: 'smooth' })}>
-                            Start Coding Now <Icons.ArrowRight />
+                            Start Session <Icons.ArrowRight />
                         </button>
                     </div>
-                    <div className="trusted-by">
-                        <p>Open Source and free forever.</p>
+                    <div className="credibility-badge">
+                        <p>⚡ Open-source • Built with React, Node.js, Socket.IO • Deployed on Render</p>
                     </div>
                 </div>
 
-                {/* Right Column: Join Box */}
+                {/* Right Column: Visual + Join Box */}
                 <div className="hero-right fade-in-up" style={{animationDelay: '0.2s'}} id="join-box">
+                    
+                    {/* The Visual Background */}
+                    <div className="hero-visual-wrapper">
+                        <MockEditorVisual />
+                    </div>
+
+                    {/* The Form Overlay */}
                     <div className="glass-panel join-panel">
                         <div className="panel-header">
                         <h2>Initialize Workspace</h2>
@@ -238,7 +265,7 @@ const App = () => {
                         </div>
                         
                         <div className="input-group">
-                        <label>ROOM ID</label>
+                        <label>1. ROOM ID</label>
                         <div className="input-with-action">
                             <input value={roomId} onChange={e => setRoomId(e.target.value)} placeholder="e.g. A4X92Z" maxLength={8}/>
                             <button onClick={generateRoomId}>Generate</button>
@@ -246,8 +273,18 @@ const App = () => {
                         </div>
 
                         <div className="input-group">
-                        <label>DISPLAY NAME</label>
+                        <label>2. DISPLAY NAME</label>
                         <input value={userName} onChange={e => setUserName(e.target.value)} placeholder="e.g. Akshat" />
+                        </div>
+
+                        <div className="input-group">
+                        <label>3. LANGUAGE</label>
+                        <select className="custom-select" value={language} onChange={e => setLanguage(e.target.value)}>
+                            <option value="javascript">JavaScript</option>
+                            <option value="python">Python</option>
+                            <option value="java">Java</option>
+                            <option value="cpp">C++</option>
+                        </select>
                         </div>
 
                         <div className="input-group">
@@ -255,8 +292,8 @@ const App = () => {
                         <input value={agenda} onChange={e => setAgenda(e.target.value)} placeholder="e.g. Pair Programming" />
                         </div>
 
-                        <button className="primary-btn" onClick={joinRoom} disabled={!isConnected}>
-                        {isConnected ? "Launch Editor" : "Connecting..."} <Icons.ArrowRight />
+                        <button className="primary-btn full-width" onClick={joinRoom} disabled={!isConnected}>
+                        {isConnected ? "Start Session" : "Connecting..."} <Icons.ArrowRight />
                         </button>
                     </div>
                 </div>
@@ -273,22 +310,22 @@ const App = () => {
             <FadeIn delay={100}>
               <div className="bento-card">
                 <div className="card-icon"><Icons.Lightning /></div>
-                <h3>Instant Sync</h3>
-                <p>WebSocket architecture ensures <span className="highlight">sub-30ms latency</span> anywhere in the world.</p>
+                <h3>WebSocket Real-time Sync</h3>
+                <p>Changes broadcasted in <span className="highlight">sub-30ms</span>. Feels like local development.</p>
               </div>
             </FadeIn>
             <FadeIn delay={200}>
               <div className="bento-card">
                 <div className="card-icon"><Icons.Shield /></div>
-                <h3>Secure by Default</h3>
-                <p>Ephemeral rooms. Data is wiped from memory as soon as the last user leaves the session.</p>
+                <h3>Zero Persistence</h3>
+                <p>Ephemeral rooms. Data is wiped from memory instantly when the session ends.</p>
               </div>
             </FadeIn>
             <FadeIn delay={300}>
               <div className="bento-card">
                 <div className="card-icon"><Icons.Code /></div>
                 <h3>Monaco Engine</h3>
-                <p>The same editor that powers VS Code. Full IntelliSense and syntax highlighting.</p>
+                <p>VS Code–powered editor with multi-language syntax highlighting.</p>
               </div>
             </FadeIn>
           </div>
@@ -355,7 +392,7 @@ const App = () => {
               <p>© 2026 Akshat Pandey. Open Source.</p>
             </div>
             <div className="footer-links">
-              <a href="https://github.com/AkshatPandey2006" target="_blank">GitHub</a>
+              <a href="https://github.com/AkshatPandey2006/Real_Code_Editor" target="_blank">GitHub</a>
               <a href="https://www.linkedin.com/in/akshatpandey2006/">LinkedIn</a>
             </div>
           </div>
