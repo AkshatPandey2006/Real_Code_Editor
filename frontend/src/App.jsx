@@ -191,9 +191,9 @@ const App = () => {
 
         <nav className="navbar">
           <div className="nav-content">
-            <div className="logo"><span className="logo-glitch">{`</>`}</span> CollabCode</div>
+            <div className="logo"><span className="logo-glitch">{`</>`}</span> Collab Code</div>
             <div className="nav-right">
-                <a href="https://github.com/AkshatPandey2006" target="_blank" className="github-link"><Icons.Github /> <span>Star on GitHub</span></a>
+                <a href="https://github.com/AkshatPandey2006/Real_Code_Editor" target="_blank" className="github-link"><Icons.Github /> <span>Star on GitHub</span></a>
                 <div className={`status-pill ${isConnected ? 'online' : 'offline'}`}>
                 <div className="dot"></div> {isConnected ? "System Online" : "Connecting..."}
                 </div>
@@ -356,8 +356,7 @@ const App = () => {
             </div>
             <div className="footer-links">
               <a href="https://github.com/AkshatPandey2006" target="_blank">GitHub</a>
-              <a href="#">Twitter</a>
-              <a href="#">Status</a>
+              <a href="https://www.linkedin.com/in/akshatpandey2006/">LinkedIn</a>
             </div>
           </div>
         </footer>
