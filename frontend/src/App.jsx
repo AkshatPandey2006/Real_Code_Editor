@@ -210,7 +210,7 @@ const App = () => {
                     </div>
                     <h1 className="hero-title">
                         Lightning-fast <br />
-                        collaborative coding. <br />
+                        collab coding. <br />
                         <span className="gradient-text">Zero friction.</span>
                     </h1>
                     <p className="hero-sub">
