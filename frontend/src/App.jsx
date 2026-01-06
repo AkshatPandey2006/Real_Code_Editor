@@ -102,7 +102,6 @@ const useRoom = () => {
 };
 
 // --- Components ---
-
 const FadeIn = ({ children, delay = 0 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef(null);
@@ -133,13 +132,10 @@ const AccordionItem = ({ question, answer }) => {
   );
 };
 
-// --- SVG Icons (Professional Replacement for Emojis) ---
 const Icons = {
   Lightning: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
   Shield: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
   Code: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>,
-  Users: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>,
-  Check: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"></polyline></svg>,
   ArrowRight: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
 };
 
@@ -177,7 +173,7 @@ const App = () => {
         <nav className="navbar">
           <div className="nav-content">
             <div className="logo">
-              <div className="logo-square"></div> CollabCode
+              <span className="logo-icon">{`</>`}</span> CollabCode
             </div>
             <div className="nav-actions">
               <a href="https://github.com/AkshatPandey2006" target="_blank" className="nav-link">GitHub</a>
@@ -190,20 +186,22 @@ const App = () => {
 
         <section className="hero">
           <FadeIn>
-            <div className="hero-badge">v2.0 Now Available</div>
+            <div className="hero-badge">
+              <span className="badge-dot"></span> v2.0 Now Available
+            </div>
             <h1 className="hero-title">
               Code at the <br /> speed of <span className="gradient-text">thought.</span>
             </h1>
             <p className="hero-sub">
-              Zero-latency collaboration environment. No sign-up. <br/> 
-              Just generate a room and start shipping.
+              A high-performance, real-time collaborative environment. <br/> 
+              Engineered for speed. Secured by design.
             </p>
           </FadeIn>
 
           <FadeIn delay={200}>
-            {/* Improved Visibility for Join Panel */}
+            {/* The Blue Glass Panel */}
             <div className="glass-panel join-panel">
-              <div className="panel-shine"></div>
+              <div className="panel-glow-effect"></div>
               <div className="panel-content">
                 <div className="input-row">
                   <div className="input-wrapper grow">
@@ -212,7 +210,7 @@ const App = () => {
                       <input 
                         value={roomId} 
                         onChange={e => setRoomId(e.target.value)} 
-                        placeholder="Ex. X7K9P2" 
+                        placeholder="ID..." 
                         maxLength={10}
                       />
                       <button onClick={generateRoomId} className="action-btn">Generate</button>
@@ -223,7 +221,7 @@ const App = () => {
                     <input 
                       value={userName} 
                       onChange={e => setUserName(e.target.value)} 
-                      placeholder="Display Name" 
+                      placeholder="Name..." 
                     />
                   </div>
                 </div>
@@ -236,65 +234,53 @@ const App = () => {
                   />
                 </div>
                 <button className="primary-btn" onClick={joinRoom} disabled={!isConnected}>
-                  {isConnected ? "Enter Workspace" : "Connecting..."} <Icons.ArrowRight />
+                  {isConnected ? "Initialize Workspace" : "Connecting..."} <Icons.ArrowRight />
                 </button>
               </div>
             </div>
           </FadeIn>
         </section>
 
-        {/* Social Proof Strip */}
-        <div className="social-proof-strip">
-          <p>TRUSTED BY DEVELOPERS AT</p>
-          <div className="logos">
-            <span>STARTUP.IO</span>
-            <span>NEXTGEN</span>
-            <span>VORTEX</span>
-            <span>CODEBASE</span>
-          </div>
-        </div>
-
         <section className="features">
           <div className="section-header">
-            <h2>Engineered for performance</h2>
+            <h2>Workflow Optimized</h2>
             <p>Built on WebSockets for real-time bi-directional communication.</p>
           </div>
           <div className="bento-grid">
             <FadeIn delay={100}>
-              <div className="bento-card card-1">
+              <div className="bento-card">
                 <div className="card-icon"><Icons.Lightning /></div>
                 <h3>Instant Sync</h3>
-                <p>WebSocket architecture ensures <span className="highlight">sub-30ms latency</span> anywhere in the world.</p>
+                <p>Changes broadcasted in <span className="highlight">sub-30ms</span>. Feels like local development.</p>
               </div>
             </FadeIn>
             <FadeIn delay={200}>
-              <div className="bento-card card-2">
+              <div className="bento-card">
                 <div className="card-icon"><Icons.Shield /></div>
                 <h3>Secure by Default</h3>
-                <p>Ephemeral rooms. Data is wiped from memory as soon as the last user leaves the session.</p>
+                <p>Rooms are ephemeral. Data is wiped from memory instantly when the session ends.</p>
               </div>
             </FadeIn>
             <FadeIn delay={300}>
-              <div className="bento-card card-3">
+              <div className="bento-card">
                 <div className="card-icon"><Icons.Code /></div>
-                <h3>Pro Environment</h3>
-                <p>Monaco Editor implementation with full syntax highlighting and IntelliSense.</p>
+                <h3>Monaco Engine</h3>
+                <p>The same editor that powers VS Code. Full IntelliSense and syntax highlighting.</p>
               </div>
             </FadeIn>
           </div>
         </section>
 
-        {/* How It Works Section */}
         <section className="how-it-works">
           <div className="section-header">
-            <h2>Workflow</h2>
+            <h2>How it works</h2>
           </div>
           <div className="steps-wrapper">
             <FadeIn delay={100}>
               <div className="step-card">
                 <div className="step-number">01</div>
                 <h3>Create</h3>
-                <p>Generate a unique Room ID or enter a custom one.</p>
+                <p>Generate a secure Room ID.</p>
               </div>
             </FadeIn>
             <div className="step-connector"></div>
@@ -302,37 +288,36 @@ const App = () => {
               <div className="step-card">
                 <div className="step-number">02</div>
                 <h3>Share</h3>
-                <p>Send the ID to your team. No account creation needed.</p>
+                <p>Send the ID to your team.</p>
               </div>
             </FadeIn>
             <div className="step-connector"></div>
             <FadeIn delay={300}>
               <div className="step-card">
                 <div className="step-number">03</div>
-                <h3>Collaborate</h3>
-                <p>Edit code simultaneously with live presence indicators.</p>
+                <h3>Code</h3>
+                <p>Real-time collaboration.</p>
               </div>
             </FadeIn>
           </div>
         </section>
 
-        {/* FAQ Section */}
         <section className="faq-section">
           <div className="section-header">
-            <h2>Frequently Asked Questions</h2>
+            <h2>FAQ</h2>
           </div>
           <div className="faq-grid">
             <AccordionItem 
-              question="Is CollabCode free to use?" 
-              answer="Yes, CollabCode is completely free and open-source for developers, students, and interviewers." 
+              question="Is CollabCode free?" 
+              answer="Yes. CollabCode is open-source and free to use for developers." 
             />
              <AccordionItem 
-              question="Does it save my code?" 
-              answer="No. For security reasons, CollabCode is ephemeral. Once all users leave the room, the code is erased." 
+              question="Does it persist my data?" 
+              answer="No. It is designed for privacy. Once you leave, the code is gone." 
             />
              <AccordionItem 
-              question="What languages are supported?" 
-              answer="Currently, we support JavaScript, Python, Java, and C++ with full syntax highlighting." 
+              question="Supported languages?" 
+              answer="JavaScript, Python, Java, C++, and more coming soon." 
             />
           </div>
         </section>
@@ -340,18 +325,16 @@ const App = () => {
         <footer className="footer">
           <div className="footer-content">
             <div className="footer-left">
-              <div className="logo-small"><div className="logo-square-sm"></div> CollabCode</div>
-              <p>© 2026 Akshat Pandey. All rights reserved.</p>
+              <div className="logo-small"><span className="logo-icon-sm">{`</>`}</span> CollabCode</div>
+              <p>© 2026 Akshat Pandey. Open Source.</p>
             </div>
             <div className="footer-links">
               <a href="https://github.com/AkshatPandey2006" target="_blank">GitHub</a>
               <a href="#">Twitter</a>
-              <a href="#">Status</a>
             </div>
           </div>
         </footer>
 
-        {/* Toasts */}
         <div className="toast-area">
           {toasts.map(t => (
             <div key={t.id} className={`toast-message ${t.type}`}>{t.message}</div>
@@ -361,7 +344,7 @@ const App = () => {
     );
   }
 
-  // --- APP EDITOR (Authenticated) ---
+  // --- APP EDITOR ---
   return (
     <div className="app-container">
       <div className="sidebar" style={{ width: sidebarWidth }}>
