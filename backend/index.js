@@ -7,7 +7,7 @@ import axios from 'axios';
 const app = express();
 const server = http.createServer(app);
 
-// Keep the self-ping to prevent sleep on Render free tier
+// Keep your self-ping logic
 const url = `https://realtime-code-editor-zwp3.onrender.com`;
 const interval = 30000;
 
@@ -15,13 +15,12 @@ function reloadWebsite() {
   axios
     .get(url)
     .then((response) => {
-      console.log(`Reloaded at ${new Date().toISOString()}: Status Code ${response.status}`);
+      console.log(`Reloaded: ${response.status}`);
     })
     .catch((error) => {
-      console.error(`Error reloading at ${new Date().toISOString()}:`, error.message);
+      console.error(`Error reloading:`, error.message);
     });
 }
-
 setInterval(reloadWebsite, interval);
 
 const io = new Server(server, {
@@ -30,7 +29,6 @@ const io = new Server(server, {
   },
 });
 
-// Store room state
 const rooms = new Map();
 
 io.on("connection", (socket) => {
@@ -40,16 +38,16 @@ io.on("connection", (socket) => {
   let currentUser = null;
 
   socket.on("join", ({ roomId, userName }) => {
-    // 1. Handle user switching rooms (cleanup old room)
+    // 1. Leave previous room if any
     if (currentRoom) {
       socket.leave(currentRoom);
       if (rooms.has(currentRoom)) {
         rooms.get(currentRoom).delete(currentUser);
+        // FIX 1: Send 'updateUserList' to the old room
         io.to(currentRoom).emit("updateUserList", Array.from(rooms.get(currentRoom)));
       }
     }
 
-    // 2. Join new room
     currentRoom = roomId;
     currentUser = userName;
 
@@ -61,12 +59,11 @@ io.on("connection", (socket) => {
 
     rooms.get(roomId).add(userName);
 
-    // 3. BROADCAST UPDATES (The Fix)
-    // Send the full list of users to update the sidebar count
+    // FIX 2: Send 'updateUserList' with the array (for the sidebar)
     io.to(roomId).emit("updateUserList", Array.from(rooms.get(roomId)));
     
-    // Send a specific notification that someone joined (for the green toast)
-    socket.broadcast.to(roomId).emit("userJoined", userName);
+    // FIX 3: Send 'userJoined' with the name (for the toast notification)
+    socket.to(roomId).emit("userJoined", userName);
   });
 
   socket.on("codeChange", ({ roomId, code }) => {
@@ -77,14 +74,11 @@ io.on("connection", (socket) => {
     if (currentRoom && currentUser) {
       rooms.get(currentRoom).delete(currentUser);
       
-      // Notify others that user left
+      // FIX 4: Correct events on leave
       socket.to(currentRoom).emit("userLeft", currentUser);
-      
-      // Update the list for everyone remaining
       io.to(currentRoom).emit("updateUserList", Array.from(rooms.get(currentRoom)));
 
       socket.leave(currentRoom);
-
       currentRoom = null;
       currentUser = null;
     }
@@ -102,10 +96,8 @@ io.on("connection", (socket) => {
     if (currentRoom && currentUser && rooms.has(currentRoom)) {
       rooms.get(currentRoom).delete(currentUser);
       
-      // Notify others
+      // FIX 5: Correct events on disconnect
       socket.to(currentRoom).emit("userLeft", currentUser);
-      
-      // Update list
       io.to(currentRoom).emit("updateUserList", Array.from(rooms.get(currentRoom)));
     }
     console.log("User Disconnected");
