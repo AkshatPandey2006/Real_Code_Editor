@@ -1,4 +1,4 @@
-# ⚡ Collab Code
+# Collab Code
 ### Real-Time Collaborative Coding Environment
 
 [![Live Demo](https://img.shields.io/badge/Demo-Live_App-2ea44f?style=for-the-badge&logo=render)](https://real-code-editor-4yx6.onrender.com/)
@@ -36,10 +36,10 @@ To deliver a smooth, local-like experience, CollabCode uses **in-memory state ma
 
 ## Core Features
 
-- ⚡ **Low-Latency Real-Time Synchronization**  
+- **Low-Latency Real-Time Synchronization**  
   Character-level code syncing using **Socket.IO**.
 
-- 💻 **Secure Remote Code Execution**  
+- **Secure Remote Code Execution**  
   Sandboxed execution via **Piston API**, supporting:
   - JavaScript
   - Python
