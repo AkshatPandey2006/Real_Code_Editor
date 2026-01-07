@@ -1,8 +1,7 @@
-# ⚡ CollabCode
-### Real-Time Collaborative Development Environment
+# ⚡ Collab Code
+### Real-Time Collaborative Coding Environment
 
 [![Live Demo](https://img.shields.io/badge/Demo-Live_App-2ea44f?style=for-the-badge&logo=render)](https://real-code-editor-4yx6.onrender.com/)
-[![License](https://img.shields.io/github/license/AkshatPandey2006/Real_Code_Editor?style=for-the-badge&color=blue)](./LICENSE)
 [![Frontend](https://img.shields.io/badge/Frontend-React-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
 [![Backend](https://img.shields.io/badge/Backend-Node.js-339933?style=for-the-badge&logo=node.js)](https://nodejs.org/)
 [![Realtime](https://img.shields.io/badge/Realtime-Socket.io-010101?style=for-the-badge&logo=socket.io)](https://socket.io/)
@@ -14,7 +13,7 @@
 
 ## 📖 Overview
 
-**CollabCode** is a high-performance, WebSocket-based collaborative code editor that allows multiple users to **write, edit, and execute code simultaneously** in a shared workspace.
+**Collab Code** is a high-performance, WebSocket-based collaborative code editor that allows multiple users to **write, edit, and execute code simultaneously** in a shared workspace.
 
 The platform follows a **zero-friction design philosophy**:
 - No authentication
@@ -48,16 +47,16 @@ To deliver a smooth, local-like experience, CollabCode uses **in-memory state ma
   - C++
 
 - 🎨 **Monaco Editor (VS Code Engine)**  
-  IntelliSense, syntax highlighting, minimap, and editor theming.
+  IntelliSense and syntax highlighting.
 
 - 📐 **Dynamic & Resizable Layout**  
-  Adjustable editor, terminal, and sidebar with horizontal and vertical resizing.
+  Adjustable editor, terminal, and sidebar.
 
 - 👥 **Live Presence Awareness**  
-  Real-time user join/leave updates within a session.
+  Real-time user join/leave updates.
 
 - 🛡️ **Privacy by Design**  
-  All session data is stored **in memory only** and destroyed immediately when a room ends.
+  All session data is stored **in memory only**.
 
 ---
 
@@ -76,23 +75,25 @@ A lightweight concurrency model that avoids CRDT/OT overhead for small collabora
 
 ## 📂 Project Structure
 
+```bash
 Real_Code_Editor/
-├── .github/ # GitHub workflows
-├── backend/ # Node.js backend
-│ └── index.js # Socket.IO server entry point
-├── frontend/ # React client
-│ ├── public/ # Static assets
-│ ├── src/
-│ │ ├── assets/ # Images & icons
-│ │ ├── App.css # Global styles
-│ │ ├── App.jsx # Root component
-│ │ └── main.jsx # React entry point
-│ ├── vite.config.js # Vite configuration
-│ └── package.json
-├── 1.png # Landing page preview
-├── 2.png # Editor preview
-├── package.json # Root dependencies
-└── README.md
+├── .github/              # GitHub Workflows
+├── backend/              # Node.js Server Logic
+│   └── index.js          # Socket.io & API Entry Point
+├── frontend/             # React Client
+│   ├── public/           # Static Public Assets
+│   ├── src/
+│   │   ├── assets/       # Icons & Images
+│   │   ├── App.css       # Global Styles (Grid & Flexbox)
+│   │   ├── App.jsx       # Main Application Component
+│   │   └── main.jsx      # React Entry Point
+│   ├── vite.config.js    # Bundler Configuration
+│   └── package.json      # Frontend Dependencies
+├── 1.png                 # Documentation Asset (Landing)
+├── 2.png                 # Documentation Asset (Editor)
+├── package.json          # Root Dependencies
+└── README.md             # Documentation
+```
 
 ---
 
@@ -164,6 +165,10 @@ This project is licensed under the **MIT License**.
 See the [LICENSE](./LICENSE) file for details.
 
 ---
+
+## Feedback
+
+If you have any feedback, please reach out to me at akshat2006pandey@gmail.com
 
 Built with ❤️ by **Akshat Pandey**  
 🔗 LinkedIn: https://www.linkedin.com/in/akshatpandey2006
