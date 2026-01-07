@@ -2,7 +2,7 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import path from "path";
-import axios from 'axios';
+import axios from "axios";
 
 const app = express();
 const server = http.createServer(app);
@@ -14,12 +14,8 @@ const interval = 30000;
 function reloadWebsite() {
   axios
     .get(url)
-    .then((response) => {
-      console.log(`Reloaded: ${response.status}`);
-    })
-    .catch((error) => {
-      console.error(`Error reloading:`, error.message);
-    });
+    .then((response) => console.log(`Reloaded: ${response.status}`))
+    .catch((error) => console.error(`Error reloading:`, error.message));
 }
 setInterval(reloadWebsite, interval);
 
@@ -38,13 +34,13 @@ io.on("connection", (socket) => {
   let currentUser = null;
 
   socket.on("join", ({ roomId, userName }) => {
-    // 1. Leave previous room
+    // 1. Leave previous room if any
     if (currentRoom) {
       socket.leave(currentRoom);
       if (rooms.has(currentRoom)) {
-        rooms.get(currentRoom).delete(currentUser);
-        // Sync list for old room
-        io.to(currentRoom).emit("userJoined", Array.from(rooms.get(currentRoom)));
+        const room = rooms.get(currentRoom);
+        room.users = room.users.filter((u) => u.socketId !== socket.id);
+        io.to(currentRoom).emit("userJoined", room.users);
       }
     }
 
@@ -53,30 +49,60 @@ io.on("connection", (socket) => {
 
     socket.join(roomId);
 
+    // 2. Initialize room if not exists
     if (!rooms.has(roomId)) {
-      rooms.set(roomId, new Set());
+      rooms.set(roomId, {
+        users: [],
+        currentCode: "// Start coding...",
+        currentLanguage: "javascript",
+      });
     }
 
-    rooms.get(roomId).add(userName);
-
-    // FIX: Send the LIST using 'userJoined' (Matching the similar project logic)
-    io.to(roomId).emit("userJoined", Array.from(rooms.get(roomId)));
+    const room = rooms.get(roomId);
     
-    // Send a separate 'notification' event for the toast
+    // 3. Add user
+    room.users.push({ socketId: socket.id, userName });
+
+    // 4. Send updated user list to everyone
+    io.to(roomId).emit("userJoined", room.users);
+
+    // 5. Send the CURRENT code/lang to the NEW user only (Sync on Join)
+    socket.emit("codeUpdate", room.currentCode);
+    socket.emit("languageUpdate", room.currentLanguage);
+
+    // 6. Notify others
     socket.broadcast.to(roomId).emit("notification", `${userName} joined the room`);
   });
 
   socket.on("codeChange", ({ roomId, code }) => {
+    if (rooms.has(roomId)) {
+      const room = rooms.get(roomId);
+      room.currentCode = code; 
+    }
     socket.to(roomId).emit("codeUpdate", code);
   });
 
+  socket.on("languageChange", ({ roomId, language }) => {
+    if (rooms.has(roomId)) {
+      const room = rooms.get(roomId);
+      room.currentLanguage = language;
+    }
+    io.to(roomId).emit("languageUpdate", language);
+  });
+
+  socket.on("typing", ({ roomId, userName }) => {
+    socket.to(roomId).emit("userTyping", userName);
+  });
+
   socket.on("leaveRoom", () => {
-    if (currentRoom && currentUser) {
-      rooms.get(currentRoom).delete(currentUser);
+    if (currentRoom && rooms.has(currentRoom)) {
+      const room = rooms.get(currentRoom);
+      room.users = room.users.filter((u) => u.socketId !== socket.id);
       
-      // FIX: Update list on leave
-      io.to(currentRoom).emit("userJoined", Array.from(rooms.get(currentRoom)));
+      io.to(currentRoom).emit("userJoined", room.users);
       socket.broadcast.to(currentRoom).emit("notification", `${currentUser} left the room`);
+      
+      if (room.users.length === 0) rooms.delete(currentRoom);
 
       socket.leave(currentRoom);
       currentRoom = null;
@@ -84,21 +110,15 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("typing", ({ roomId, userName }) => {
-    socket.to(roomId).emit("userTyping", userName);
-  });
-
-  socket.on("languageChange", ({ roomId, language }) => {
-    io.to(roomId).emit("languageUpdate", language);
-  });
-
   socket.on("disconnect", () => {
-    if (currentRoom && currentUser && rooms.has(currentRoom)) {
-      rooms.get(currentRoom).delete(currentUser);
+    if (currentRoom && rooms.has(currentRoom)) {
+      const room = rooms.get(currentRoom);
+      room.users = room.users.filter((u) => u.socketId !== socket.id);
       
-      // FIX: Update list on disconnect
-      io.to(currentRoom).emit("userJoined", Array.from(rooms.get(currentRoom)));
+      io.to(currentRoom).emit("userJoined", room.users);
       socket.broadcast.to(currentRoom).emit("notification", `${currentUser} left`);
+
+      if (room.users.length === 0) rooms.delete(currentRoom);
     }
     console.log("User Disconnected");
   });
