@@ -11,7 +11,7 @@
 
 ---
 
-## 📖 Overview
+## Overview
 
 **Collab Code** is a high-performance, WebSocket-based collaborative code editor that allows multiple users to **write, edit, and execute code simultaneously** in a shared workspace.
 
@@ -24,7 +24,7 @@ To deliver a smooth, local-like experience, CollabCode uses **in-memory state ma
 
 ---
 
-## 📸 Interface Preview
+## Interface Preview
 
 ### Landing Page
 ![Landing Page](./1.png)
@@ -34,7 +34,7 @@ To deliver a smooth, local-like experience, CollabCode uses **in-memory state ma
 
 ---
 
-## ✨ Core Features
+## Core Features
 
 - ⚡ **Low-Latency Real-Time Synchronization**  
   Character-level code syncing using **Socket.IO**.
@@ -46,21 +46,21 @@ To deliver a smooth, local-like experience, CollabCode uses **in-memory state ma
   - Java
   - C++
 
-- 🎨 **Monaco Editor (VS Code Engine)**  
+- **Monaco Editor (VS Code Engine)**  
   IntelliSense and syntax highlighting.
 
-- 📐 **Dynamic & Resizable Layout**  
+- **Dynamic & Resizable Layout**  
   Adjustable editor, terminal, and sidebar.
 
-- 👥 **Live Presence Awareness**  
+- **Live Presence Awareness**  
   Real-time user join/leave updates.
 
-- 🛡️ **Privacy by Design**  
+- **Privacy by Design**  
   All session data is stored **in memory only**.
 
 ---
 
-## 🧠 Engineering Decisions
+## Engineering Decisions
 
 ### WebSockets over HTTP Polling
 Enables full-duplex, low-latency communication essential for real-time collaboration.
@@ -73,7 +73,7 @@ A lightweight concurrency model that avoids CRDT/OT overhead for small collabora
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```bash
 Real_Code_Editor/
@@ -97,7 +97,7 @@ Real_Code_Editor/
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js **v14+**
@@ -131,7 +131,7 @@ This starts:
 npm run dev
 ```
 
-### 🔌 Socket API Reference
+### Socket API Reference
 
 | Event Name  | Direction           | Payload                | Description       |
 |------------|---------------------|------------------------|-------------------|
@@ -140,7 +140,7 @@ npm run dev
 | syncCode   | Server → Client     | `{ code }`             | Send room state   |
 | leaveRoom  | Client → Server     | `null`                 | Leave the room    |
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome!
 
@@ -159,7 +159,7 @@ Contributions are welcome!
    ```
 5. Open a Pull Request
 
-## 📄 License
+## License
 
 This project is licensed under the **MIT License**.  
 See the [LICENSE](./LICENSE) file for details.
