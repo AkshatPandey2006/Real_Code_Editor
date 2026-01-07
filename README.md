@@ -1,4 +1,4 @@
-# ⚡ CollabCode  
+# ⚡ CollabCode
 ### Real-Time Collaborative Development Environment
 
 [![Live Demo](https://img.shields.io/badge/Demo-Live_App-2ea44f?style=for-the-badge&logo=render)](https://real-code-editor-4yx6.onrender.com/)
@@ -8,20 +8,20 @@
 [![Realtime](https://img.shields.io/badge/Realtime-Socket.io-010101?style=for-the-badge&logo=socket.io)](https://socket.io/)
 
 **Synchronized Coding · Instant Execution · Ephemeral Workspaces**  
-*Built for technical interviews, pair programming, and competitive coding.*
+*Built for technical interviews, pair programming, and competitive programming.*
 
 ---
 
 ## 📖 Overview
 
-**CollabCode** is a high-performance, WebSocket-based collaborative code editor that enables multiple developers to **write, edit, and execute code simultaneously** in a shared workspace.
+**CollabCode** is a high-performance, WebSocket-based collaborative code editor that allows multiple users to **write, edit, and execute code simultaneously** in a shared workspace.
 
-The platform follows a **Zero-Friction philosophy**:
+The platform follows a **zero-friction design philosophy**:
 - No authentication
 - Instant room creation
 - Fully ephemeral sessions
 
-To achieve a smooth, local-like experience, CollabCode uses **in-memory state management** and **WebSocket-based synchronization**, delivering **sub-30ms latency** across connected clients.
+To deliver a smooth, local-like experience, CollabCode uses **in-memory state management** and **WebSocket-based synchronization**, achieving **sub-30ms latency** between connected clients.
 
 ---
 
@@ -37,132 +37,133 @@ To achieve a smooth, local-like experience, CollabCode uses **in-memory state ma
 
 ## ✨ Core Features
 
-- ⚡ **Low-Latency Real-Time Sync**  
-  Character-level synchronization using **Socket.io**.
+- ⚡ **Low-Latency Real-Time Synchronization**  
+  Character-level code syncing using **Socket.IO**.
 
 - 💻 **Secure Remote Code Execution**  
-  Integrated **Piston API** sandbox supporting:
+  Sandboxed execution via **Piston API**, supporting:
   - JavaScript
   - Python
   - Java
   - C++
 
 - 🎨 **Monaco Editor (VS Code Engine)**  
-  Provides IntelliSense, syntax highlighting, and minimap support.
+  IntelliSense, syntax highlighting, minimap, and editor theming.
 
 - 📐 **Dynamic & Resizable Layout**  
-  Adjustable editor, terminal, and sidebar panels (horizontal & vertical resizing).
+  Adjustable editor, terminal, and sidebar with horizontal and vertical resizing.
 
 - 👥 **Live Presence Awareness**  
-  Real-time user join/leave updates and session visibility.
+  Real-time user join/leave updates within a session.
 
 - 🛡️ **Privacy by Design**  
-  All session data is stored **in memory** and destroyed immediately when the room ends.
+  All session data is stored **in memory only** and destroyed immediately when a room ends.
 
 ---
 
-Engineering Decisions
+## 🧠 Engineering Decisions
 
-WebSockets over HTTP Polling
-Enables full-duplex, low-latency communication for real-time collaboration.
+### WebSockets over HTTP Polling
+Enables full-duplex, low-latency communication essential for real-time collaboration.
 
-In-Memory Map vs Redis
-Eliminates network overhead and complexity for ephemeral rooms.
+### In-Memory State vs Redis
+Chosen to eliminate network overhead and reduce system complexity for ephemeral sessions.
 
-Last-Write-Wins (LWW) Strategy
-Simplifies concurrency management without CRDT/OT overhead for small sessions.
+### Last-Write-Wins (LWW) Strategy
+A lightweight concurrency model that avoids CRDT/OT overhead for small collaborative rooms.
 
-📂 Project Structure
+---
+
+## 📂 Project Structure
 
 Real_Code_Editor/
-├── .github/                # GitHub workflows
-├── backend/                # Node.js backend
-│   └── index.js            # Socket.io server entry
-├── frontend/               # React client
-│   ├── public/             # Static assets
-│   ├── src/
-│   │   ├── assets/         # Icons & images
-│   │   ├── App.css         # Global styles
-│   │   ├── App.jsx         # Main component
-│   │   └── main.jsx        # React entry
-│   ├── vite.config.js      # Vite config
-│   └── package.json
-├── 1.png                   # Landing preview
-├── 2.png                   # Editor preview
-├── package.json            # Root dependencies
+├── .github/ # GitHub workflows
+├── backend/ # Node.js backend
+│ └── index.js # Socket.IO server entry point
+├── frontend/ # React client
+│ ├── public/ # Static assets
+│ ├── src/
+│ │ ├── assets/ # Images & icons
+│ │ ├── App.css # Global styles
+│ │ ├── App.jsx # Root component
+│ │ └── main.jsx # React entry point
+│ ├── vite.config.js # Vite configuration
+│ └── package.json
+├── 1.png # Landing page preview
+├── 2.png # Editor preview
+├── package.json # Root dependencies
 └── README.md
 
-🚀 Getting Started
-Prerequisites
+---
 
-Node.js v14+
+## 🚀 Getting Started
 
-npm or yarn
+### Prerequisites
+- Node.js **v14+**
+- npm or yarn
 
-Installation
+---
+
+### Installation
 
 Clone the repository:
-
+```bash
 git clone https://github.com/AkshatPandey2006/Real_Code_Editor.git
 cd Real_Code_Editor
-
+```
 
 Install dependencies:
-
+```bash
 npm install
 cd frontend
 npm install
 cd ..
+```
 
-Run Locally
+### Run Locally
 
-This command starts:
+This starts:
+- Backend on `http://localhost:5000`
+- Frontend on `http://localhost:5173`
 
-Backend on http://localhost:5000
-
-Frontend on http://localhost:5173
-
+```bash
 npm run dev
+```
 
+### 🔌 Socket API Reference
 
-Open in browser:
+| Event Name  | Direction           | Payload                | Description       |
+|------------|---------------------|------------------------|-------------------|
+| join       | Client → Server     | `{ roomId, userName }` | Join a room       |
+| codeChange | Bidirectional       | `{ roomId, code }`     | Sync code updates |
+| syncCode   | Server → Client     | `{ code }`             | Send room state   |
+| leaveRoom  | Client → Server     | `null`                 | Leave the room    |
 
-http://localhost:5173
+## 🤝 Contributing
 
-🔌 Socket API Reference
-Event Name	Direction	Payload	Description
-join	Client → Server	{ roomId, userName }	Join a room
-codeChange	Bidirectional	{ roomId, code }	Sync code
-syncCode	Server → Client	{ code }	Send room state
-leaveRoom	Client → Server	null	Leave room
-🤝 Contributing
+Contributions are welcome!
 
-Contributions are welcome.
+1. Fork the repository
+2. Create a feature branch:
+   ```bash
+   git checkout -b feature/YourFeature
+   ```
+3. Commit your changes:
+   ```bash
+   git commit -m "Add YourFeature"
+   ```
+4. Push to the branch:
+   ```bash
+   git push origin feature/YourFeature
+   ```
+5. Open a Pull Request
 
-Fork the repository
+## 📄 License
 
-Create a feature branch
+This project is licensed under the **MIT License**.  
+See the [LICENSE](./LICENSE) file for details.
 
-git checkout -b feature/YourFeature
+---
 
-
-Commit your changes
-
-git commit -m "Add YourFeature"
-
-
-Push to the branch
-
-git push origin feature/YourFeature
-
-
-Open a Pull Request
-
-📄 License
-
-This project is licensed under the MIT License.
-See the LICENSE
- file for details.
-
-Built with ❤️ by Akshat Pandey
-LinkedIn: https://www.linkedin.com/in/akshatpandey2006/
+Built with ❤️ by **Akshat Pandey**  
+🔗 LinkedIn: https://www.linkedin.com/in/akshatpandey2006
