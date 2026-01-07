@@ -2,8 +2,9 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import "./App.css";
 import io from "socket.io-client";
 import Editor from "@monaco-editor/react";
+import Peer from "peerjs"; 
+import axios from "axios"; 
 
-// Ensure this URL points to your deployed backend
 const SERVER_URL = "https://real-time-code-9ui2.onrender.com/"; 
 
 const SOCKET_OPTIONS = {
@@ -21,9 +22,19 @@ const useRoom = () => {
   const [agenda, setAgenda] = useState("");
   const [language, setLanguage] = useState("javascript");
   const [code, setCode] = useState("// Start coding...");
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState([]); 
   const [typing, setTyping] = useState("");
   const [toasts, setToasts] = useState([]);
+  
+  // Feature 2: Run Code State
+  const [output, setOutput] = useState(""); 
+  const [isRunning, setIsRunning] = useState(false);
+
+  // Feature 1: Video State
+  const [myPeer, setMyPeer] = useState(null);
+  const [myStream, setMyStream] = useState(null);
+  const [peers, setPeers] = useState({}); 
+  const [remoteStreams, setRemoteStreams] = useState([]); 
 
   const addToast = useCallback((message, type = "info") => {
     const id = Date.now();
@@ -31,6 +42,7 @@ const useRoom = () => {
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 4000);
   }, []);
 
+  // 1. Initialize Socket
   useEffect(() => {
     const s = io(SERVER_URL, SOCKET_OPTIONS);
     setSocket(s);
@@ -42,11 +54,25 @@ const useRoom = () => {
     return () => s.disconnect();
   }, [addToast]);
 
+  // 2. Initialize PeerJS (Video) - FIXED
   useEffect(() => {
-    if (!socket) return;
-    
+    // Use public PeerJS server
+    const p = new Peer(); 
+
+    p.on("open", (id) => {
+      setMyPeer(p);
+      console.log("My Peer ID:", id);
+    });
+
+    return () => p.destroy();
+  }, []);
+
+  // 3. Socket Event Listeners
+  useEffect(() => {
+    if (!socket || !myPeer) return;
+
     socket.on("userJoined", (updatedUsers) => {
-      if (Array.isArray(updatedUsers)) setUsers(updatedUsers);
+      setUsers(updatedUsers);
     });
 
     socket.on("notification", (msg) => addToast(msg, "success"));
@@ -70,27 +96,75 @@ const useRoom = () => {
       socket.off("userTyping");
       socket.off("languageUpdate");
     };
-  }, [socket, addToast]);
+  }, [socket, myPeer, addToast]);
 
-  const joinRoom = () => {
-    if (roomId && userName && socket) {
-      socket.emit("join", { roomId, userName, agenda });
-      // If language was selected before join, sync it (optional logic depending on backend)
-      if(language !== "javascript") {
-          socket.emit("languageChange", { roomId, language });
+  // 4. Handle Incoming Video Calls
+  useEffect(() => {
+    if (!myPeer || !myStream) return;
+
+    myPeer.on("call", (call) => {
+      console.log("Receiving call...");
+      call.answer(myStream); 
+      
+      call.on("stream", (userVideoStream) => {
+        setRemoteStreams((prev) => {
+            if(prev.some(s => s.peerId === call.peer)) return prev;
+            return [...prev, { peerId: call.peer, stream: userVideoStream }]
+        });
+      });
+    });
+  }, [myPeer, myStream]);
+
+  // 5. Connect to New Users (Call Logic)
+  useEffect(() => {
+    if (!socket || !myPeer || !myStream) return;
+    
+    users.forEach(user => {
+        if (user.peerId !== myPeer.id && !peers[user.peerId]) {
+            const call = myPeer.call(user.peerId, myStream);
+            
+            call.on("stream", (userVideoStream) => {
+                setRemoteStreams((prev) => {
+                    if(prev.some(s => s.peerId === user.peerId)) return prev;
+                    return [...prev, { peerId: user.peerId, stream: userVideoStream, userName: user.userName }]
+                });
+            });
+
+            setPeers(prev => ({ ...prev, [user.peerId]: call }));
+        }
+    });
+
+  }, [users, myPeer, myStream, socket, peers]);
+
+
+  // Actions
+  const joinRoom = async () => {
+    if (roomId && userName && socket && myPeer) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        setMyStream(stream);
+        
+        socket.emit("join", { roomId, userName, agenda, peerId: myPeer.id });
+        setJoined(true);
+      } catch (err) {
+        addToast("Camera/Mic permission needed", "error");
+        console.error(err);
       }
-      setJoined(true);
     } else {
-      addToast("Room ID and Name required", "error");
+      addToast("Room ID, Name & Ready State required", "error");
     }
   };
 
   const leaveRoom = () => {
     if (socket) socket.emit("leaveRoom");
+    if (myStream) myStream.getTracks().forEach(track => track.stop());
+    setMyStream(null);
+    setRemoteStreams([]);
     setJoined(false);
     setRoomId("");
     setUserName("");
     setCode("// Start coding...");
+    setOutput("");
   };
 
   const updateCode = (newCode) => {
@@ -101,16 +175,68 @@ const useRoom = () => {
     }
   };
 
+  const runCode = async () => {
+    setIsRunning(true);
+    setOutput("Running...");
+    
+    const languageMap = {
+        javascript: { language: 'javascript', version: '18.15.0' },
+        python: { language: 'python', version: '3.10.0' },
+        java: { language: 'java', version: '15.0.2' },
+        cpp: { language: 'c++', version: '10.2.0' }
+    };
+
+    const langConfig = languageMap[language] || languageMap.javascript;
+
+    try {
+        const response = await axios.post("https://emkc.org/api/v2/piston/execute", {
+            language: langConfig.language,
+            version: langConfig.version,
+            files: [{ content: code }]
+        });
+        
+        const { run: { output, stderr } } = response.data;
+        setOutput(output || stderr || "No Output");
+    } catch (error) {
+        setOutput("Error running code: " + error.message);
+    } finally {
+        setIsRunning(false);
+    }
+  };
+
   const updateLanguage = (newLang) => {
     setLanguage(newLang);
     if (socket) socket.emit("languageChange", { roomId, language: newLang });
   };
 
+  const toggleMic = () => {
+    if(myStream) myStream.getAudioTracks()[0].enabled = !myStream.getAudioTracks()[0].enabled;
+  };
+  
+  const toggleCam = () => {
+    if(myStream) myStream.getVideoTracks()[0].enabled = !myStream.getVideoTracks()[0].enabled;
+  };
+
   return {
     socket, isConnected, joined, roomId, setRoomId, userName, setUserName,
     agenda, setAgenda, language, setLanguage, code, users, typing, toasts,
-    joinRoom, leaveRoom, updateCode, updateLanguage, addToast
+    joinRoom, leaveRoom, updateCode, updateLanguage, addToast,
+    runCode, output, isRunning, myStream, remoteStreams, toggleMic, toggleCam
   };
+};
+
+// --- VIDEO COMPONENT ---
+const VideoPlayer = ({ stream, muted = false, label }) => {
+    const ref = useRef();
+    useEffect(() => {
+        if(ref.current && stream) ref.current.srcObject = stream;
+    }, [stream]);
+    return (
+        <div className="video-container">
+            <video ref={ref} autoPlay playsInline muted={muted} className="video-feed" />
+            <div className="video-label">{label}</div>
+        </div>
+    );
 };
 
 // --- UI COMPONENTS ---
@@ -124,56 +250,16 @@ const FadeIn = ({ children, delay = 0 }) => {
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
   }, []);
-  return (
-    <div ref={ref} style={{ transitionDelay: `${delay}ms` }} className={`fade-in ${isVisible ? "visible" : ""}`}>
-      {children}
-    </div>
-  );
-};
-
-const AccordionItem = ({ question, answer }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  return (
-    <div className={`faq-item ${isOpen ? 'open' : ''}`} onClick={() => setIsOpen(!isOpen)}>
-      <div className="faq-question">
-        {question}
-        <span className="faq-icon">{isOpen ? '−' : '+'}</span>
-      </div>
-      <div className="faq-answer">{answer}</div>
-    </div>
-  );
-};
-
-// CSS-Only Mock Editor Component
-const MockEditorVisual = () => {
-  return (
-    <div className="mock-window">
-      <div className="mock-header">
-        <div className="mock-dots">
-          <div className="dot red"></div>
-          <div className="dot yellow"></div>
-          <div className="dot green"></div>
-        </div>
-        <div className="mock-title">main.js — Collab</div>
-      </div>
-      <div className="mock-body">
-        <div className="code-line"><span className="keyword">const</span> <span className="var">sync</span> = <span className="string">"Instant"</span>;</div>
-        <div className="code-line"><span className="keyword">function</span> <span className="func">collaborate</span>() {'{'}</div>
-        <div className="code-line indent">  <span className="keyword">return</span> <span className="boolean">true</span>; <span className="cursor-indicator">|</span></div>
-        <div className="code-line">{'}'}</div>
-        <div className="code-line"><span className="comment">// Built on WebSockets</span></div>
-      </div>
-    </div>
-  );
+  return ( <div ref={ref} style={{ transitionDelay: `${delay}ms` }} className={`fade-in ${isVisible ? "visible" : ""}`}> {children} </div> );
 };
 
 const Icons = {
   ArrowRight: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>,
   Copy: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>,
+  Play: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
+  Mic: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>,
+  Video: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>,
   Users: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>,
-  Lightning: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
-  Shield: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
-  Code: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>,
   Github: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
 };
 
@@ -182,10 +268,11 @@ const App = () => {
   const {
     isConnected, joined, roomId, setRoomId, userName, setUserName,
     agenda, setAgenda, language, setLanguage, code, users, typing, toasts,
-    joinRoom, leaveRoom, updateCode, updateLanguage, addToast
+    joinRoom, leaveRoom, updateCode, updateLanguage, addToast,
+    runCode, output, isRunning, myStream, remoteStreams, toggleMic, toggleCam
   } = useRoom();
 
-  const [sidebarWidth, setSidebarWidth] = useState(260);
+  const [sidebarWidth, setSidebarWidth] = useState(300); 
   const [isResizing, setIsResizing] = useState(false);
 
   const resize = useCallback((e) => {
@@ -201,7 +288,7 @@ const App = () => {
   const generateRoomId = () => setRoomId(Math.random().toString(36).substring(2, 8).toUpperCase());
   const copyRoomId = () => { navigator.clipboard.writeText(roomId); addToast("ID Copied", "success"); };
 
-  // --- LANDING PAGE VIEW ---
+  // --- LANDING PAGE ---
   if (!joined) {
     return (
       <div className="landing-container">
@@ -250,11 +337,6 @@ const App = () => {
                 {/* Right Column: Visual + Join Box */}
                 <div className="hero-right fade-in-up" style={{animationDelay: '0.2s'}} id="join-box">
                     
-                    {/* The Visual Background */}
-                    <div className="hero-visual-wrapper">
-                        <MockEditorVisual />
-                    </div>
-
                     {/* The Form Overlay */}
                     <div className="glass-panel join-panel">
                         <div className="panel-header">
@@ -298,90 +380,6 @@ const App = () => {
             </div>
         </section>
         
-        {/* FEATURES */}
-        <section className="features">
-          <div className="section-header">
-            <h2>Engineered for performance</h2>
-            <p>A developer-first experience without the bloated tooling.</p>
-          </div>
-          <div className="bento-grid">
-            <FadeIn delay={100}>
-              <div className="bento-card">
-                <div className="card-icon"><Icons.Lightning /></div>
-                <h3>WebSocket Real-time Sync</h3>
-                <p>Changes broadcasted in <span className="highlight">sub-30ms</span>. Feels like local development.</p>
-              </div>
-            </FadeIn>
-            <FadeIn delay={200}>
-              <div className="bento-card">
-                <div className="card-icon"><Icons.Shield /></div>
-                <h3>Zero Persistence</h3>
-                <p>Ephemeral rooms. Data is wiped from memory instantly when the session ends.</p>
-              </div>
-            </FadeIn>
-            <FadeIn delay={300}>
-              <div className="bento-card">
-                <div className="card-icon"><Icons.Code /></div>
-                <h3>Monaco Engine</h3>
-                <p>VS Code–powered editor with multi-language syntax highlighting.</p>
-              </div>
-            </FadeIn>
-          </div>
-        </section>
-
-        {/* HOW IT WORKS */}
-        <section className="how-it-works">
-          <div className="section-header">
-            <h2>How it works</h2>
-          </div>
-          <div className="steps-wrapper">
-            <FadeIn delay={100}>
-              <div className="step-card">
-                <div className="step-number">01</div>
-                <h3>Create</h3>
-                <p>Generate a unique Room ID.</p>
-              </div>
-            </FadeIn>
-            <div className="step-connector"></div>
-            <FadeIn delay={200}>
-              <div className="step-card">
-                <div className="step-number">02</div>
-                <h3>Share</h3>
-                <p>Send the ID to your team.</p>
-              </div>
-            </FadeIn>
-            <div className="step-connector"></div>
-            <FadeIn delay={300}>
-              <div className="step-card">
-                <div className="step-number">03</div>
-                <h3>Code</h3>
-                <p>Real-time collaboration.</p>
-              </div>
-            </FadeIn>
-          </div>
-        </section>
-
-        {/* FAQ */}
-        <section className="faq-section">
-          <div className="section-header">
-            <h2>Frequently asked questions</h2>
-          </div>
-          <div className="faq-grid">
-            <AccordionItem 
-              question="Is CollabCode free to use?" 
-              answer="Yes, CollabCode is completely free and open-source for developers, students, and interviewers." 
-            />
-             <AccordionItem 
-              question="Does it persist my code?" 
-              answer="No. For security reasons, CollabCode is ephemeral. Once all users leave the room, the code is erased forever." 
-            />
-             <AccordionItem 
-              question="What languages are supported?" 
-              answer="Currently, we support JavaScript, Python, Java, and C++ with full syntax highlighting via the Monaco editor." 
-            />
-          </div>
-        </section>
-
         {/* FOOTER */}
         <footer className="footer">
           <div className="footer-content">
@@ -421,13 +419,26 @@ const App = () => {
           <h2 className="agenda-title" title={agenda}>{agenda || "Untitled Session"}</h2>
         </div>
 
+        {/* --- VIDEO SECTION --- */}
+        <div className="video-grid">
+            {myStream && <VideoPlayer stream={myStream} muted={true} label="You" />}
+            {remoteStreams.map(s => (
+                <VideoPlayer key={s.peerId} stream={s.stream} label={users.find(u => u.peerId === s.peerId)?.userName || "User"} />
+            ))}
+        </div>
+        
+        <div className="video-controls">
+            <button className="control-btn" onClick={toggleMic}><Icons.Mic /></button>
+            <button className="control-btn" onClick={toggleCam}><Icons.Video /></button>
+        </div>
+
         <div className="users-section">
           <div className="section-title"><Icons.Users /> ONLINE ({users.length})</div>
           <div className="user-list">
             {users.map((u, i) => (
               <div key={i} className="user-item">
-                <div className="avatar" style={{background: stringToColor(u)}}>{u[0].toUpperCase()}</div>
-                <span className="name">{u}</span>
+                <div className="avatar" style={{background: '#3b82f6'}}>{u.userName[0].toUpperCase()}</div>
+                <span className="name">{u.userName}</span>
                 <div className="status-dot-active"></div>
               </div>
             ))}
@@ -448,6 +459,9 @@ const App = () => {
               <option value="java">Java</option>
               <option value="cpp">C++</option>
             </select>
+            <button className={`run-btn ${isRunning ? 'loading' : ''}`} onClick={runCode} disabled={isRunning}>
+                <Icons.Play /> {isRunning ? "Running..." : "Run"}
+            </button>
           </div>
           <div className="toolbar-right">
             {typing && <div className="typing-indicator">{typing}</div>}
@@ -467,17 +481,18 @@ const App = () => {
               fontSize: 14,
               minimap: { enabled: false },
               padding: { top: 24 },
-              scrollBeyondLastLine: false,
-              cursorBlinking: "smooth",
-              cursorSmoothCaretAnimation: true,
-              smoothScrolling: true,
             }}
           />
         </div>
 
+        {/* --- OUTPUT TERMINAL --- */}
+        <div className="terminal-panel">
+            <div className="terminal-header">Console Output</div>
+            <pre className="terminal-content">{output || "Run code to see output..."}</pre>
+        </div>
+
         <div className="status-bar">
           <div className="status-item">Spaces: 2</div>
-          <div className="status-item">UTF-8</div>
           <div className="status-item">{language.toUpperCase()}</div>
           <div className="status-item right">⚡ Connected</div>
         </div>
@@ -490,13 +505,6 @@ const App = () => {
       </div>
     </div>
   );
-};
-
-const stringToColor = (str) => {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  const c = (hash & 0x00ffffff).toString(16).toUpperCase();
-  return "#" + "00000".substring(0, 6 - c.length) + c;
 };
 
 export default App;
