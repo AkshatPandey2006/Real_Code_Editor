@@ -362,7 +362,7 @@ const App = () => {
               <div className="bento-card">
                 <div className="card-icon"><Icons.Shield /></div>
                 <h3>Zero Persistence</h3>
-                <p>Ephemeral rooms. Data is wiped from memory instantly when the session ends.</p>
+                <p>Ephemeral rooms. Data is wiped from memory when the session ends.</p>
               </div>
             </FadeIn>
             <FadeIn delay={300}>
