@@ -22,6 +22,8 @@ The platform follows a **zero-friction design philosophy**:
 
 To deliver a smooth, local-like experience, CollabCode uses **in-memory state management** and **WebSocket-based synchronization**, achieving **sub-30ms latency** between connected clients.
 
+https://github.com/user-attachments/assets/d6e12bc9-dd59-4e08-b31c-401acd9294ce
+
 ---
 
 ## Interface Preview
