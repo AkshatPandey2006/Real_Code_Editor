@@ -90,7 +90,7 @@ Real_Code_Editor/
 │   ├── vite.config.js    # Bundler Configuration
 │   └── package.json      # Frontend Dependencies
 ├── 1.png                 # Documentation Asset (Landing)
-├── 2.png                 # Documentation Asset (Editor)
+├── 21.png                # Documentation Asset (Editor)
 ├── package.json          # Root Dependencies
 └── README.md             # Documentation
 ```
