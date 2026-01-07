@@ -52,7 +52,6 @@ const useRoom = () => {
     if (!socket) return;
 
     socket.on("userJoined", (updatedUsers) => {
-      // Safety check: ensure we always receive an array
       if (Array.isArray(updatedUsers)) {
         setUsers(updatedUsers);
       }
@@ -220,30 +219,48 @@ const App = () => {
   } = useRoom();
 
   const [sidebarWidth, setSidebarWidth] = useState(260);
-  const [isResizing, setIsResizing] = useState(false);
+  const [terminalHeight, setTerminalHeight] = useState(200); // NEW: Terminal State
+  const [isResizingSidebar, setIsResizingSidebar] = useState(false);
+  const [isResizingTerminal, setIsResizingTerminal] = useState(false); // NEW: Terminal State
+
+  // MOUSE EVENTS
+  const startResizingSidebar = useCallback(() => setIsResizingSidebar(true), []);
+  const startResizingTerminal = useCallback(() => setIsResizingTerminal(true), []);
+  const stopResizing = useCallback(() => {
+    setIsResizingSidebar(false);
+    setIsResizingTerminal(false);
+  }, []);
 
   const resize = useCallback((e) => {
-    if (isResizing && e.clientX > 200 && e.clientX < 500) setSidebarWidth(e.clientX);
-  }, [isResizing]);
+    if (isResizingSidebar) {
+        if (e.clientX > 200 && e.clientX < 800) setSidebarWidth(e.clientX);
+    }
+    if (isResizingTerminal) {
+        // Calculate height from bottom: WindowHeight - MouseY - StatusBar(25px)
+        const newHeight = window.innerHeight - e.clientY - 25; 
+        if (newHeight > 50 && newHeight < window.innerHeight - 200) {
+            setTerminalHeight(newHeight);
+        }
+    }
+  }, [isResizingSidebar, isResizingTerminal]);
 
   useEffect(() => {
     window.addEventListener("mousemove", resize);
-    window.addEventListener("mouseup", () => setIsResizing(false));
-    return () => { window.removeEventListener("mousemove", resize); window.removeEventListener("mouseup", () => setIsResizing(false)); };
-  }, [resize]);
+    window.addEventListener("mouseup", stopResizing);
+    return () => { 
+        window.removeEventListener("mousemove", resize); 
+        window.removeEventListener("mouseup", stopResizing); 
+    };
+  }, [resize, stopResizing]);
 
   const generateRoomId = () => setRoomId(Math.random().toString(36).substring(2, 8).toUpperCase());
   const copyRoomId = () => { navigator.clipboard.writeText(roomId); addToast("ID Copied", "success"); };
 
-  // --- HELPER FOR SAFE USER RENDER ---
   const getAvatarLetter = (u) => {
-    const name = u.userName || u || "?"; // Handle both Object and String formats
+    const name = u.userName || u || "?";
     return name.toString()[0]?.toUpperCase() || "?";
   };
-
-  const getUserName = (u) => {
-    return u.userName || u || "Guest";
-  };
+  const getUserName = (u) => u.userName || u || "Guest";
 
   // --- LANDING PAGE VIEW ---
   if (!joined) {
@@ -267,8 +284,7 @@ const App = () => {
         {/* HERO SECTION */}
         <section className="hero-section">
             <div className="hero-content-wrapper">
-                
-                {/* Left Column: Text */}
+                {/* Left Column */}
                 <div className="hero-left fade-in-up">
                     <div className="hero-badge">
                         <span className="badge-dot"></span> v2.0 Now Public
@@ -291,21 +307,16 @@ const App = () => {
                     </div>
                 </div>
 
-                {/* Right Column: Visual + Join Box */}
+                {/* Right Column */}
                 <div className="hero-right fade-in-up" style={{animationDelay: '0.2s'}} id="join-box">
-                    
-                    {/* The Visual Background */}
                     <div className="hero-visual-wrapper">
                         <MockEditorVisual />
                     </div>
-
-                    {/* The Form Overlay */}
                     <div className="glass-panel join-panel">
                         <div className="panel-header">
                         <h2>Initialize Workspace</h2>
                         <p>Secure, ephemeral environments.</p>
                         </div>
-                        
                         <div className="input-group">
                         <label>1. ROOM ID</label>
                         <div className="input-with-action">
@@ -313,12 +324,10 @@ const App = () => {
                             <button onClick={generateRoomId}>Generate</button>
                         </div>
                         </div>
-
                         <div className="input-group">
                         <label>2. DISPLAY NAME</label>
                         <input value={userName} onChange={e => setUserName(e.target.value)} placeholder="e.g. Akshat" />
                         </div>
-
                         <div className="input-group">
                         <label>3. LANGUAGE</label>
                         <select className="custom-select" value={language} onChange={e => setLanguage(e.target.value)}>
@@ -328,12 +337,10 @@ const App = () => {
                             <option value="cpp">C++</option>
                         </select>
                         </div>
-
                         <div className="input-group">
                         <label>AGENDA <span className="optional">(OPTIONAL)</span></label>
                         <input value={agenda} onChange={e => setAgenda(e.target.value)} placeholder="e.g. Pair Programming" />
                         </div>
-
                         <button className="primary-btn full-width" onClick={joinRoom} disabled={!isConnected}>
                         {isConnected ? "Start Session" : "Connecting..."} <Icons.ArrowRight />
                         </button>
@@ -342,90 +349,6 @@ const App = () => {
             </div>
         </section>
         
-        {/* FEATURES */}
-        <section className="features">
-          <div className="section-header">
-            <h2>Engineered for performance</h2>
-            <p>A developer-first experience without the bloated tooling.</p>
-          </div>
-          <div className="bento-grid">
-            <FadeIn delay={100}>
-              <div className="bento-card">
-                <div className="card-icon"><Icons.Lightning /></div>
-                <h3>WebSocket Real-time Sync</h3>
-                <p>Changes broadcasted in <span className="highlight">sub-30ms</span>. Feels like local development.</p>
-              </div>
-            </FadeIn>
-            <FadeIn delay={200}>
-              <div className="bento-card">
-                <div className="card-icon"><Icons.Shield /></div>
-                <h3>Zero Persistence</h3>
-                <p>Ephemeral rooms. Data is wiped from memory instantly when the session ends.</p>
-              </div>
-            </FadeIn>
-            <FadeIn delay={300}>
-              <div className="bento-card">
-                <div className="card-icon"><Icons.Code /></div>
-                <h3>Monaco Engine</h3>
-                <p>VS Code–powered editor with multi-language syntax highlighting.</p>
-              </div>
-            </FadeIn>
-          </div>
-        </section>
-
-        {/* HOW IT WORKS */}
-        <section className="how-it-works">
-          <div className="section-header">
-            <h2>How it works</h2>
-          </div>
-          <div className="steps-wrapper">
-            <FadeIn delay={100}>
-              <div className="step-card">
-                <div className="step-number">01</div>
-                <h3>Create</h3>
-                <p>Generate a unique Room ID.</p>
-              </div>
-            </FadeIn>
-            <div className="step-connector"></div>
-            <FadeIn delay={200}>
-              <div className="step-card">
-                <div className="step-number">02</div>
-                <h3>Share</h3>
-                <p>Send the ID to your team.</p>
-              </div>
-            </FadeIn>
-            <div className="step-connector"></div>
-            <FadeIn delay={300}>
-              <div className="step-card">
-                <div className="step-number">03</div>
-                <h3>Code</h3>
-                <p>Real-time collaboration.</p>
-              </div>
-            </FadeIn>
-          </div>
-        </section>
-
-        {/* FAQ */}
-        <section className="faq-section">
-          <div className="section-header">
-            <h2>Frequently asked questions</h2>
-          </div>
-          <div className="faq-grid">
-            <AccordionItem 
-              question="Is CollabCode free to use?" 
-              answer="Yes, CollabCode is completely free and open-source for developers, students, and interviewers." 
-            />
-             <AccordionItem 
-              question="Does it persist my code?" 
-              answer="No. For security reasons, CollabCode is ephemeral. Once all users leave the room, the code is erased forever." 
-            />
-             <AccordionItem 
-              question="What languages are supported?" 
-              answer="Currently, we support JavaScript, Python, Java, and C++ with full syntax highlighting via the Monaco editor." 
-            />
-          </div>
-        </section>
-
         {/* FOOTER */}
         <footer className="footer">
           <div className="footer-content">
@@ -479,11 +402,10 @@ const App = () => {
             ))}
           </div>
         </div>
-
         <button className="disconnect-btn" onClick={leaveRoom}>Disconnect</button>
       </div>
 
-      <div className="resizer" onMouseDown={() => setIsResizing(true)}></div>
+      <div className="resizer" onMouseDown={startResizingSidebar}></div>
 
       <div className="main-content">
         <div className="toolbar">
@@ -520,8 +442,11 @@ const App = () => {
           />
         </div>
 
+        {/* --- VERTICAL RESIZER --- */}
+        <div className="resizer-vertical" onMouseDown={startResizingTerminal}></div>
+
         {/* --- OUTPUT TERMINAL --- */}
-        <div className="terminal-panel">
+        <div className="terminal-panel" style={{ height: terminalHeight }}>
             <div className="terminal-header">Console Output</div>
             <pre className="terminal-content">{output || "Run code to see output..."}</pre>
         </div>
