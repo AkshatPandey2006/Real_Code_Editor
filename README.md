@@ -30,7 +30,7 @@ To deliver a smooth, local-like experience, CollabCode uses **in-memory state ma
 ![Landing Page](./1.png)
 
 ### Collaborative Workspace
-![Editor View](./2.png)
+![Editor View](./21.png)
 
 ---
 
