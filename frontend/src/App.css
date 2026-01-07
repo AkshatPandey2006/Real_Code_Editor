@@ -198,6 +198,33 @@ body {
 .primary-btn.large { width: auto; padding: 16px 32px; }
 .primary-btn.full-width { width: 100%; }
 
+/* --- SECTIONS (Features, How it works, FAQ) --- */
+.features, .how-it-works, .faq-section { max-width: 1100px; margin: 0 auto; padding: 100px 24px; width: 100%; }
+.section-header { text-align: center; margin-bottom: 60px; }
+.section-header h2 { font-size: 2rem; font-weight: 700; margin-bottom: 10px; }
+.section-header p { color: var(--text-dim); }
+
+.bento-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; align-items: stretch; }
+.bento-card { height: 100%; display: flex; flex-direction: column; background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 30px; border-radius: 12px; transition: 0.3s; }
+.bento-card:hover { border-color: var(--blue-glow); transform: translateY(-5px); }
+.card-icon { color: var(--blue); margin-bottom: 15px; }
+.bento-card h3 { font-size: 1.1rem; margin-bottom: 10px; font-weight: 600; }
+.bento-card p { color: var(--text-dim); font-size: 0.9rem; line-height: 1.6; }
+.highlight { color: var(--blue); }
+
+.steps-wrapper { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; }
+.step-card { flex: 1; text-align: center; min-width: 250px; }
+.step-number { font-size: 1rem; color: var(--blue); background: rgba(59, 130, 246, 0.1); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin: 0 auto 16px; font-weight: 700; border: 1px solid rgba(59, 130, 246, 0.2); }
+.step-connector { height: 1px; background: #222; flex: 0.5; margin-top: 20px; display: none; }
+@media(min-width: 768px) { .step-connector { display: block; } }
+
+.faq-grid { max-width: 700px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+.faq-item { border-bottom: 1px solid var(--border); }
+.faq-question { padding: 20px 0; cursor: pointer; display: flex; justify-content: space-between; font-weight: 500; }
+.faq-answer { padding-bottom: 20px; color: var(--text-dim); font-size: 0.9rem; display: none; }
+.faq-item.open .faq-answer { display: block; animation: slideDown 0.3s ease; }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
 .footer { border-top: 1px solid var(--border); background: #000; padding: 60px 0; font-size: 0.85rem; margin-top: auto; }
 .footer-content { max-width: 1100px; margin: 0 auto; padding: 0 24px; display: flex; justify-content: space-between; }
 .footer-left p { color: #555; margin-top: 10px; }
