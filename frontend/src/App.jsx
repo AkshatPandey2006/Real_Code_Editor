@@ -200,7 +200,7 @@ const MockEditorVisual = () => {
 
 const Icons = {
   ArrowRight: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>,
-  Copy: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>,
+  Copy: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>,
   Play: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
   Users: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>,
   Lightning: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
@@ -297,13 +297,8 @@ const App = () => {
                     <p className="hero-sub">
                         Built for interviews, pair programming, and competitive programming practice. Spin up instant coding rooms with a powerful, VS Code-like editor. 
                     </p>
-                    <div className="hero-cta">
-                        <button className="primary-btn large" onClick={() => document.getElementById('join-box').scrollIntoView({ behavior: 'smooth' })}>
-                            Start Session <Icons.ArrowRight />
-                        </button>
-                    </div>
                     <div className="credibility-badge">
-                        <p>⚡ Open-source • Built with React, Node.js, Socket.IO • Deployed on Render</p>
+                        <p>Open-source • Built with React, Node.js, Socket.IO</p>
                     </div>
                 </div>
 
@@ -347,6 +342,90 @@ const App = () => {
                     </div>
                 </div>
             </div>
+        </section>
+
+        {/* FEATURES (Restored) */}
+        <section className="features">
+          <div className="section-header">
+            <h2>Engineered for performance</h2>
+            <p>A developer-first experience without the bloated tooling.</p>
+          </div>
+          <div className="bento-grid">
+            <FadeIn delay={100}>
+              <div className="bento-card">
+                <div className="card-icon"><Icons.Lightning /></div>
+                <h3>WebSocket Real-time Sync</h3>
+                <p>Changes broadcasted in <span className="highlight">sub-30ms</span>. Feels like local development.</p>
+              </div>
+            </FadeIn>
+            <FadeIn delay={200}>
+              <div className="bento-card">
+                <div className="card-icon"><Icons.Shield /></div>
+                <h3>Zero Persistence</h3>
+                <p>Ephemeral rooms. Data is wiped from memory instantly when the session ends.</p>
+              </div>
+            </FadeIn>
+            <FadeIn delay={300}>
+              <div className="bento-card">
+                <div className="card-icon"><Icons.Code /></div>
+                <h3>Monaco Engine</h3>
+                <p>VS Code–powered editor with multi-language syntax highlighting.</p>
+              </div>
+            </FadeIn>
+          </div>
+        </section>
+
+        {/* HOW IT WORKS (Restored) */}
+        <section className="how-it-works">
+          <div className="section-header">
+            <h2>How it works</h2>
+          </div>
+          <div className="steps-wrapper">
+            <FadeIn delay={100}>
+              <div className="step-card">
+                <div className="step-number">01</div>
+                <h3>Create</h3>
+                <p>Generate a unique Room ID.</p>
+              </div>
+            </FadeIn>
+            <div className="step-connector"></div>
+            <FadeIn delay={200}>
+              <div className="step-card">
+                <div className="step-number">02</div>
+                <h3>Share</h3>
+                <p>Send the ID to your team.</p>
+              </div>
+            </FadeIn>
+            <div className="step-connector"></div>
+            <FadeIn delay={300}>
+              <div className="step-card">
+                <div className="step-number">03</div>
+                <h3>Code</h3>
+                <p>Real-time collaboration.</p>
+              </div>
+            </FadeIn>
+          </div>
+        </section>
+
+        {/* FAQ (Restored) */}
+        <section className="faq-section">
+          <div className="section-header">
+            <h2>Frequently asked questions</h2>
+          </div>
+          <div className="faq-grid">
+            <AccordionItem 
+              question="Is CollabCode free to use?" 
+              answer="Yes, CollabCode is completely free and open-source for developers, students, and interviewers." 
+            />
+             <AccordionItem 
+              question="Does it persist my code?" 
+              answer="No. For security reasons, CollabCode is ephemeral. Once all users leave the room, the code is erased forever." 
+            />
+             <AccordionItem 
+              question="What languages are supported?" 
+              answer="Currently, we support JavaScript, Python, Java, and C++ with full syntax highlighting via the Monaco editor." 
+            />
+          </div>
         </section>
         
         {/* FOOTER */}
